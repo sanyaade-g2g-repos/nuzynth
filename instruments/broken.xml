@@ -1,0 +1,23 @@
+<instrument>
+    <oscillator>
+        <voice blur="0" stretch="0" amplitudes="1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0," />
+        <voice blur="0" stretch="0" amplitudes="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0," />
+        <voice blur="0" stretch="0" amplitudes="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0," />
+        <voice blur="0" stretch="0" amplitudes="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0," />
+        <voice blur="0" stretch="0" amplitudes="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0," />
+    </oscillator>
+    <modulator>
+        <timeline type="attack" speed="80" />
+        <timeline type="release" speed="14" />
+        <timeline type="loop1" speed="245">
+            <effect type="lowpass" curve="255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0," />
+        </timeline>
+        <timeline type="loop2" speed="60" />
+        <timeline type="constant">
+            <effect type="lowpassPeak" depth="254" />
+            <effect type="lowpass" depth="112" />
+            <effect type="distortion" depth="128" />
+            <effect type="loopSpeed" depth="254" />
+        </timeline>
+    </modulator>
+</instrument>

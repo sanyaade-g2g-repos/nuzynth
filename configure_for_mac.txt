@@ -1,0 +1,16 @@
+
+wxWidgets configure:
+arch_flags="-arch i386 -mmacosx-version-min=10.5"
+../configure --disable-shared --with-opengl CFLAGS="$arch_flags" CXXFLAGS="$arch_flags" LDFLAGS="$arch_flags" OBJCFLAGS="$arch_flags" OBJCXXFLAGS="$arch_flags"
+
+
+LLVM configure:
+../llvm/configure --enable-optimized --enable-jit --enable-targets=x86 --target=i386-apple-darwin9 --build=i386-apple-darwin9 --host=i386-apple-darwin9 CFLAGS="-mmacosx-version-min=10.5" CXXFLAGS="-mmacosx-version-min=10.5"
+
+
+portmidi:
+make -f pm_mac/Makefile.osx ARCH='-arch i386 -mmacosx-version-min=10.5'
+
+
+portaudio:
+./configure --disable-mac-universal --disable-dependency-tracking CFLAGS="-O2 -g -Wall -arch i386 -mmacosx-version-min=10.5" LDFLAGS="-arch i386 -mmacosx-version-min=10.5"

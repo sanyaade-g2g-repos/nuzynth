@@ -1,0 +1,2 @@
+wxwidgets:
+  --enable-optimise --enable-stl --enable-unicode --disable-threads --enable-static --disable-shared --enable-monolithic --with-opengl
