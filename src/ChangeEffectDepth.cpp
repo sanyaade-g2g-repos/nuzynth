@@ -24,7 +24,6 @@
  */
 
 #include <memory.h>
-#include "Monitor.h"
 #include "ChangeEffectDepth.h"
 
 
@@ -36,7 +35,7 @@ ChangeEffectDepth::ChangeEffectDepth(Instrument* inst, char timeline, char type,
   this->type = type;
   before = inst->mod.depths[timeline][type];
   after = value;
-  didAnything = (before != after);
+  noop = (before == after);
   
   doForwards();
 }

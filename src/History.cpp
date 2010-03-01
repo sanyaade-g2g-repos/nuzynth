@@ -36,7 +36,7 @@ History::~History() {
 }
 
 void History::record(Change* change) {
-  if (change->didNothing()) {
+  if (change->isNoOp()) {
     delete change;
     return;
   }

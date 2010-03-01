@@ -30,15 +30,23 @@ class Change {
 public:
   Change(bool reversed);
   virtual ~Change();
-  bool didNothing();
+  bool isNoOp();
   void undo();
   void redo();
 protected:
-  bool didAnything;
+  bool noop;
+  
+  // isDoneForwards() returns whether or not the Changes was most recently 
+  // performed forwards or backwards. If the change created something, do not 
+  // delete it in the change destructor unless the Change was performed 
+  // backwards: 
+  bool isDoneForwards();
+  
   virtual void doForwards() = 0;
   virtual void doBackwards() = 0;
 private:
   bool reversed;
+  bool doneForwards;
 };
 
 #endif // CHANGE_H 

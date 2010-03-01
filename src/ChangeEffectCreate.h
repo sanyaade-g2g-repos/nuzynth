@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef CHANGE_EFFECT_CREATE_H 
-#define CHANGE_EFFECT_CREATE_H 
+#ifndef CHANGE_EFFECT_CREATE_H
+#define CHANGE_EFFECT_CREATE_H
 
 #include "Change.h"
 #include "Instrument.h"
@@ -43,4 +43,4 @@ protected:
   unsigned char depth;
 };
 
-#endif // CHANGE_EFFECT_CREATE_H 
+#endif // CHANGE_EFFECT_CREATE_H

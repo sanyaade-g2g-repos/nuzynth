@@ -230,8 +230,7 @@ void OscillatorPanel::spinUpdated(wxCommandEvent& event) {
 void OscillatorPanel::OnSliderMove(wxScrollEvent& event) {
   int val = event.GetSelection();
   HarmonicSet* set = &inst->oscillator.harmonicSet[selectedVoice];
-  if (sliderChange == 0 || sliderChange->didNothing()) {
-    if (sliderChange != 0) delete sliderChange;
+  if (sliderChange == 0) {
     switch (event.GetId()) {
       case BLUR_SLIDER:
         sliderChange = new ChangeOscillatorSlider(inst, &set->blur, val);

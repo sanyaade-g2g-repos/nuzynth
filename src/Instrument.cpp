@@ -364,7 +364,7 @@ void Instrument::save(FILE* file) {
 
 void Instrument::prepareToDie() {
   markDirty();
-  mod.wave = 0; // this is not a memory leak because it will be compared against the previous modulator's wave.
+  mod.wave = 0; /// this is not a memory leak because it will be compared against the previous modulator's wave.
   for (int timeline = 0; timeline < NUM_TIMELINES; timeline++) {
     while (timelines[timeline].size() > 0) {
       destroyEffect(timelines[timeline].back());

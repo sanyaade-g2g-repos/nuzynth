@@ -24,7 +24,6 @@
  */
 
 #include <memory.h>
-#include "Monitor.h"
 #include "ChangeTimelineSpeed.h"
 
 
@@ -35,7 +34,7 @@ ChangeTimelineSpeed::ChangeTimelineSpeed(Instrument* inst, char timeline, unsign
   this->timeline = timeline;
   before = inst->mod.speeds[timeline];
   after = value;
-  didAnything = (before != after);
+  noop = (before == after);
   
   doForwards();
 }

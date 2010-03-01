@@ -24,7 +24,6 @@
  */
 
 #include <memory.h>
-#include "Monitor.h"
 #include "ChangeSwitchEffect.h"
 
 
@@ -35,7 +34,7 @@ ChangeSwitchEffect::ChangeSwitchEffect(Instrument* inst, char timeline, char bef
   this->timeline = timeline;
   this->before = before;
   this->after = after;
-  didAnything = true;
+  noop = false;
   doForwards();
 }
 

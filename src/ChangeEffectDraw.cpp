@@ -24,7 +24,6 @@
  */
 
 #include <memory.h>
-#include "Monitor.h"
 #include "ChangeEffectDraw.h"
 
 
@@ -79,7 +78,7 @@ void ChangeEffectDraw::update(int prevIndex, int nextIndex, float value) {
   if (bottomIndex < lowestIndex) lowestIndex = bottomIndex;
   if (topIndex > highestIndex) highestIndex = topIndex;
   
-  didAnything = true;
+  noop = false;
 }
 
 void ChangeEffectDraw::doForwards() {

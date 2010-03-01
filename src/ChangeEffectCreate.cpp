@@ -24,7 +24,6 @@
  */
 
 #include <memory.h>
-#include "Monitor.h"
 #include "ChangeEffectCreate.h"
 
 
@@ -53,7 +52,7 @@ ChangeEffectCreate::ChangeEffectCreate(Instrument* inst, char timeline, char typ
     buffer = 0;
   }
   
-  didAnything = true;
+  noop = false;
   
   if (destroy) {
     doBackwards();

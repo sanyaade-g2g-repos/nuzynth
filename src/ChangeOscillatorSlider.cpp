@@ -34,6 +34,8 @@ ChangeOscillatorSlider::ChangeOscillatorSlider(Instrument* inst, unsigned char* 
   this->address = address;
   before = *address;
   after = newValue;
+  noop = false;
+  
   doForwards();
 }
 
@@ -49,7 +51,6 @@ void ChangeOscillatorSlider::doForwards() {
   Monitor::setProperty(address, after);
   inst->oscillator.dirty = true;
   inst->markDirty();
-  didAnything = true;
 }
 
 void ChangeOscillatorSlider::doBackwards() {

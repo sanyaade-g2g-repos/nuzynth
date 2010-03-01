@@ -27,21 +27,36 @@
 
 Change::Change(bool reversed) {
   this->reversed = reversed;
-  didAnything = false;
+  noop = true;
+  doneForwards = !reversed;
 }
 
 Change::~Change() {}
 
-bool Change::didNothing() {
-  return !didAnything;
+bool Change::isNoOp() {
+  return noop;
+}
+
+bool Change::isDoneForwards() {
+  return doneForwards;
 }
 
 void Change::undo() {
-  if (reversed) doForwards();
-  else doBackwards();
+  if (reversed) {
+    doForwards();
+    doneForwards = true;
+  } else {
+    doBackwards();
+    doneForwards = false;
+  }
 }
 
 void Change::redo() {
-  if (reversed) doBackwards();
-  else doForwards();
+  if (reversed) {
+    doBackwards();
+    doneForwards = false;
+  } else {
+    doForwards();
+    doneForwards = true;
+  }
 }

@@ -24,7 +24,6 @@
  */
 
 #include <memory.h>
-#include "Monitor.h"
 #include "ChangeOscillatorDraw.h"
 
 
@@ -81,7 +80,7 @@ void ChangeOscillatorDraw::update(int prevIndex, int nextIndex, float value) {
   if (bottomIndex < lowestIndex) lowestIndex = bottomIndex;
   if (topIndex > highestIndex) highestIndex = topIndex;
   
-  didAnything = true;
+  noop = false;
 }
 
 void ChangeOscillatorDraw::swap() {
