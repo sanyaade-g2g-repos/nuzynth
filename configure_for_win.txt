@@ -1,2 +1,4 @@
 wxwidgets:
   --enable-optimise --enable-stl --enable-unicode --disable-threads --enable-static --disable-shared --enable-monolithic --with-opengl
+
+...What were the steps for LLVM, PortMidi, PortAudio, and FFTW3?

@@ -23,15 +23,23 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef EFFECT_H
-#define EFFECT_H
+#ifndef CHANGE_SWITCH_EFFECT_H 
+#define CHANGE_SWITCH_EFFECT_H 
 
-class Instrument;
-struct Effect {
+#include "Change.h"
+#include "Instrument.h"
+
+class ChangeSwitchEffect : public Change {
 public:
+  ChangeSwitchEffect(Instrument* inst, char timeline, char before, char after);
+  virtual ~ChangeSwitchEffect();
+protected:
+  virtual void doForwards();
+  virtual void doBackwards();
   Instrument* inst;
-  char type;
   char timeline;
+  char before;
+  char after;
 };
 
-#endif // EFFECT_H
+#endif // CHANGE_SWITCH_EFFECT_H 

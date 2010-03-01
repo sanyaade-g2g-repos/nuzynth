@@ -14,3 +14,7 @@ make -f pm_mac/Makefile.osx ARCH='-arch i386 -mmacosx-version-min=10.5'
 
 portaudio:
 ./configure --disable-mac-universal --disable-dependency-tracking CFLAGS="-O2 -g -Wall -arch i386 -mmacosx-version-min=10.5" LDFLAGS="-arch i386 -mmacosx-version-min=10.5"
+
+
+fftw3:
+build the single precision version (float, not double)... And if it works, write down the configure step here. :)

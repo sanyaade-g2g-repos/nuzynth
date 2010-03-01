@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __SONG_H__ 
-#define __SONG_H__ 
+#ifndef SONG_H
+#define SONG_H
 
 #include <stdio.h>
 #include <vector>
@@ -42,4 +42,4 @@ public:
   //~Song();
 };
 
-#endif // __SONG_H__ 
+#endif // SONG_H

@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __CHANGE_OSCILLATOR_SLIDER_H__ 
-#define __CHANGE_OSCILLATOR_SLIDER_H__ 
+#ifndef CHANGE_OSCILLATOR_SLIDER_H 
+#define CHANGE_OSCILLATOR_SLIDER_H 
 
 #include "Change.h"
 #include "Instrument.h"
@@ -32,6 +32,7 @@
 class ChangeOscillatorSlider : public Change {
 public:
   ChangeOscillatorSlider(Instrument* inst, unsigned char* address, unsigned char newValue);
+  virtual ~ChangeOscillatorSlider();
   void update(unsigned char newValue);
 protected:
   virtual void doForwards();
@@ -42,4 +43,4 @@ protected:
   unsigned char after;
 };
 
-#endif // __CHANGE_OSCILLATOR_SLIDER_H__ 
+#endif // CHANGE_OSCILLATOR_SLIDER_H 

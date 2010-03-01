@@ -23,15 +23,24 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef EFFECT_H
-#define EFFECT_H
+#ifndef CHANGE_EFFECT_DEPTH_H
+#define CHANGE_EFFECT_DEPTH_H
 
-class Instrument;
-struct Effect {
+#include "Change.h"
+#include "Instrument.h"
+
+class ChangeEffectDepth : public Change {
 public:
+  ChangeEffectDepth(Instrument* inst, char timeline, char type, unsigned char value);
+  virtual ~ChangeEffectDepth();
+protected:
+  virtual void doForwards();
+  virtual void doBackwards();
   Instrument* inst;
-  char type;
   char timeline;
+  char type;
+  unsigned char before;
+  unsigned char after;
 };
 
-#endif // EFFECT_H
+#endif // CHANGE_EFFECT_DEPTH_H

@@ -26,9 +26,11 @@
 #include <stdio.h>
 #include "EffectPanel.h"
 #include "Monitor.h"
+#include "ChangeEffectCreate.h"
 
 BEGIN_EVENT_TABLE(TimelinePanel, wxPanel)
-  EVT_COMMAND_SCROLL (SPEED_SLIDER, TimelinePanel::OnSliderUpdate)
+  EVT_COMMAND_SCROLL_THUMBTRACK (SPEED_SLIDER, TimelinePanel::OnSliderUpdate)
+  EVT_COMMAND_SCROLL_THUMBRELEASE (SPEED_SLIDER, TimelinePanel::OnSliderFinish)
   EVT_BUTTON    (ADD_BUTTON, TimelinePanel::OnAddPressed)
 END_EVENT_TABLE()
 
@@ -41,6 +43,7 @@ TimelinePanel::TimelinePanel(wxScrolledWindow* scrollMe, int timeline, bool isCo
   this->isConstant = isConstant;
   this->scrollMe = scrollMe;
   inst = 0;
+  speedChange = 0;
   PushEventHandler(new WheelCatcher(scrollMe));
   
   wxStaticText *text;
@@ -79,12 +82,11 @@ TimelinePanel::TimelinePanel(wxScrolledWindow* scrollMe, int timeline, bool isCo
   addButton = new wxButton(this, ADD_BUTTON, addLabel, wxDefaultPosition, wxDefaultSize);
   topBox->Add(addButton, wxSizerFlags(0).Center());
   addButton->PushEventHandler(new WheelCatcher(scrollMe));
-  setInstrument(0);
 }
 
 void TimelinePanel::OnAddPressed( wxCommandEvent &event ) {
   if (inst == 0) return;
-  inst->createEffect(timeline);
+  inst->song->history.record(new ChangeEffectCreate(inst, timeline));
 }
 
 void TimelinePanel::OnSliderUpdate( wxScrollEvent &event ) {
@@ -93,37 +95,64 @@ void TimelinePanel::OnSliderUpdate( wxScrollEvent &event ) {
   switch (event.GetId()) {
     case SPEED_SLIDER:
       printf("SPEED_SLIDER\n");
-      inst->setSpeed(timeline, val);
+      if (speedChange != 0) {
+        speedChange->undo();
+        delete speedChange;
+        speedChange = 0;
+      }
+      speedChange = new ChangeTimelineSpeed(inst, timeline, val);
       break;
   }
   Instrument::cleanAllDirt();
   printf("slider updated, index: %d\n", val);
 }
 
+void TimelinePanel::OnSliderFinish( wxScrollEvent& event ) {
+  switch (event.GetId()) {
+    case SPEED_SLIDER:
+      inst->song->history.record(speedChange);
+      speedChange = 0;
+      break;
+  }
+}
+
+
+
+
+
 void TimelinePanel::setInstrument(Instrument* inst) {
+  printf("TimelinePanel::setInstrument from %s to %s\n", this->inst == 0 ? "null" : "valid", inst == 0 ? "null" : "valid");
   if (this->inst != 0) {
     while (children.size() > 0) {
       destroyChild(children.front());
     }
-    Monitor::removeCallback(&inst->timelineEffectCount[timeline], this);
+    Monitor::removeCallback(&this->inst->timelineEffectCount[timeline], this);
+    
+    if (speedBox != 0) { /// TODO: && numchilden != 0 ???
+      Monitor::removeCallback( (void*)(&this->inst->mod.speeds[timeline]), this );
+    }
   }
   
   this->inst = inst;
   
   if (this->inst != 0) {
-    std::vector<Effect*> vec = inst->timelines[timeline];
+    std::vector<Effect*> vec = this->inst->timelines[timeline];
     std::vector<Effect*>::iterator iter = vec.begin();
     for (; iter != vec.end(); iter++) {
       addChild(*iter);
     }
-    Monitor::addCallback( &inst->timelineEffectCount[timeline], 
+    Monitor::addCallback( &this->inst->timelineEffectCount[timeline], 
                           new Callback<int, TimelinePanel>
                             (this, &TimelinePanel::onEffectCountChanged) );
     
     addButton->Enable(true);
-    if (speedBox != 0) { // TODO: && numchilden != 0 ???
+    if (speedBox != 0) { /// TODO: && numchilden != 0 ???
       speedBox->Show(children.size() != 0);
-      speedSlider->SetValue(inst->getSpeed(timeline));
+      speedSlider->SetValue(this->inst->getSpeed(timeline));
+      
+      Monitor::addCallback( &inst->mod.speeds[timeline], 
+                            new Callback<unsigned char, TimelinePanel>
+                              (this, &TimelinePanel::speedChangedCallback) );
     }
   } else {
     if (speedBox != 0) speedBox->Show(false);
@@ -137,8 +166,25 @@ void TimelinePanel::onEffectCountChanged( int* val ) {
   while (inst->timelineEffectCount[timeline] > children.size()) {
     addChild(inst->timelines[timeline][children.size()]);
   }
+  printf("count changed, count: %d, children: %d\n", inst->timelineEffectCount[timeline], children.size());
   while (inst->timelineEffectCount[timeline] < children.size()) {
-    destroyChild(children[children.size()-1]);
+    printf("children: %d\n", children.size());
+    for (int i = 0; i < children.size(); i++) {
+      if (i < inst->timelineEffectCount[timeline]) {
+        printf("%d, %d, %d, %s\n", 
+          i, 
+          inst->timelines[timeline][i]->type, 
+          children[i]->effect->type, 
+          (children[i]->effect == inst->timelines[timeline][i]) ?"same":"different");
+      }
+      if (i >= inst->timelineEffectCount[timeline] || 
+          children[i]->effect != inst->timelines[timeline][i])
+      {
+        printf("destroying %d\n", i);
+        destroyChild(children[i]);
+        break;
+      }
+    }
   }
 }
 
@@ -150,6 +196,10 @@ void TimelinePanel::addChild(Effect* effect) {
   if (speedBox != 0) speedBox->Show(true);
   if (children.size() >= NUM_EFFECT_TYPES) addButton->Show(false);
   GetContainingSizer()->SetVirtualSizeHints(GetParent());
+}
+
+void TimelinePanel::speedChangedCallback(unsigned char* val) {
+  speedSlider->SetValue(inst->getSpeed(timeline));
 }
 
 void TimelinePanel::destroyChild(EffectPanel* child) {

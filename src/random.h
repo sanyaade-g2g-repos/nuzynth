@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _RANDOM_H_
-#define _RANDOM_H_
+#ifndef RANDOM_H
+#define RANDOM_H
 
 #include <stdlib.h>
 #include <time.h>
@@ -42,4 +42,4 @@ static inline float fastRandom(float low, float high) {
   return low + ((high-low)*(((float) ((seed>>16)&0x7FFF)) / ((float) 0x7FFF)));
 }
 
-#endif // _RANDOM_H_
+#endif // RANDOM_H

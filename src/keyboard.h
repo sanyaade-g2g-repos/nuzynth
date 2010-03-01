@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __KEYBOARD_H__ 
-#define __KEYBOARD_H__ 
+#ifndef KEYBOARD_H 
+#define KEYBOARD_H 
 
 #include <vector>
 
@@ -35,4 +35,4 @@ extern std::vector<unsigned char> releasedKeys;
 void keyboard_init();
 char pitchIndexFromKeyCode(long keyCode);
 
-#endif // __KEYBOARD_H__ 
+#endif // KEYBOARD_H 

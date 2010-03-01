@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __POOL_H__ 
-#define __POOL_H__ 
+#ifndef POOL_H
+#define POOL_H
 
 #include "SinglyLinkedList.h"
 
@@ -41,4 +41,4 @@ void* Pool_draw(Pool* pool);
 
 void Pool_return(Pool* pool, void* item);
 
-#endif // __POOL_H__ 
+#endif // POOL_H

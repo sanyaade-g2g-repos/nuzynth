@@ -515,41 +515,16 @@ Pool* Instrument::modulatorPool() {
   return pool;
 }
 
-void Instrument::draw(int effect, int timeline, int prevIndex, int nextIndex, float value) {
-  unsigned char* buffer;
+unsigned char* Instrument::copyEffectBuffer(int effect, int timeline) {
+  unsigned char* buffer = (unsigned char*) Pool_draw(effectPool());
   unsigned char* oldBuffer = mod.buffers[timeline][effect];
-  if (!dirty) {
-    markDirty();
-    buffer = (unsigned char*) Pool_draw(effectPool());
-    memcpy(buffer, oldBuffer, EFFECT_LENGTH * sizeof(unsigned char));
-    Monitor::setProperty(&mod.buffers[timeline][effect], buffer);
-  } else {
-    // TODO: If instument is dirty for some reason other than previous drawing, this 
-    // will end up drawing on a buffer that is in use by the audio callback!
-    buffer = oldBuffer;
-  }
-  
-  buffer[nextIndex] = (unsigned char)(value * 254.0f);
-  if (prevIndex == nextIndex) {
-    return;
-  }
-  
-  int leftIndex, rightIndex;
-  float leftValue, rightValue, delta;
-  if (prevIndex < nextIndex) {
-    leftIndex = prevIndex;
-    rightIndex = nextIndex;
-  } else {
-    leftIndex = nextIndex;
-    rightIndex = prevIndex;
-  }
-  leftValue = (float)buffer[leftIndex] * (1.0f / 254.0f);
-  rightValue = (float)buffer[rightIndex] * (1.0f / 254.0f);
-  delta = (rightValue - leftValue) / (float)(rightIndex - leftIndex);
-  for (int i = leftIndex + 1; i < rightIndex; i++) {
-    leftValue += delta;
-    buffer[i] = (unsigned char)(leftValue * 254.0f);
-  }
+  memcpy(buffer, oldBuffer, EFFECT_LENGTH * sizeof(unsigned char));
+  return buffer;
+}
+
+void Instrument::replaceEffectBuffer(int effect, int timeline, unsigned char* newBuffer) {
+  Monitor::setProperty(&mod.buffers[timeline][effect], newBuffer);
+  markDirty();
 }
 
 void Instrument::markDirty() {
@@ -639,9 +614,9 @@ Effect* Instrument::createEffect(int timeline) {
   effect->timeline = timeline;
   effect->type = findUnusedEffectType(timeline);
   timelines[timeline].push_back(effect);
-  Monitor::setProperty(&timelineEffectCount[timeline], timelineEffectCount[timeline] + 1);
   setEffectEnabled(effect->type, effect->timeline, true);
   setDepth(effect->type, effect->timeline, 127);
+  Monitor::setProperty(&timelineEffectCount[timeline], timelineEffectCount[timeline] + 1);
   
   return effect;
 }
@@ -650,53 +625,57 @@ void Instrument::destroyEffect(Effect* effect) {
   std::vector<Effect*>::iterator iter = timelines[effect->timeline].begin();
   for (; iter != timelines[effect->timeline].end(); iter++) {
     if (*iter == effect) {
-      Monitor::setProperty(&timelineEffectCount[effect->timeline], timelineEffectCount[effect->timeline] - 1);
       timelines[effect->timeline].erase(iter);
-      break;
+      Monitor::setProperty(&timelineEffectCount[effect->timeline], timelineEffectCount[effect->timeline] - 1);
+      setEffectEnabled(effect->type, effect->timeline, false);
+      delete effect;
+      return;
     }
   }
-  setEffectEnabled(effect->type, effect->timeline, false);
-  delete effect;
 }
 
-void Instrument::switchEffectType(Effect* effect, char type) {
-  // TODO: consider rewriting this so that you don't need to copy 
-  // to a local buffer and then copy back.
+void Instrument::switchEffectType(char timeline, char before, char after) {
+  /// TODO: consider rewriting this so that you don't need to copy 
+  /// to a local buffer and then copy back.
   unsigned char buffer[EFFECT_LENGTH];
-  unsigned char oldDepth = getDepth(effect->type, effect->timeline);
+  unsigned char oldDepth = getDepth(before, timeline);
   
-  std::vector<Effect*>::iterator iter = timelines[effect->timeline].begin();
+  std::vector<Effect*>::iterator iter = timelines[timeline].begin();
   
-  unsigned char** buffers = mod.buffers[effect->timeline];
-  for (; iter != timelines[effect->timeline].end(); iter++) {
-    Effect* other = *iter;
-    if (other != effect && other->type == type) {
-      setDepth(effect->type, effect->timeline, getDepth(type, effect->timeline));
-      setDepth(type, effect->timeline, oldDepth);
+  Effect* effect = 0;
+  Effect* other = 0;
+  unsigned char** buffers = mod.buffers[timeline];
+  for (; iter != timelines[timeline].end(); iter++) {
+    if ((*iter)->type == before) effect = *iter;
+    if ((*iter)->type == after) other = *iter;
+    
+    if (effect != 0 && other != 0 && effect != other) {
+      setDepth(before, timeline, getDepth(after, timeline));
+      setDepth(after, timeline, oldDepth);
       
-      if (effect->timeline != (int)CONSTANT_TIMELINE) {
-        memcpy(buffer, buffers[effect->type], sizeof(unsigned char) * EFFECT_LENGTH);
-        memcpy(buffers[effect->type], buffers[other->type], sizeof(unsigned char) * EFFECT_LENGTH);
-        memcpy(buffers[other->type], buffer, sizeof(unsigned char) * EFFECT_LENGTH);
+      if (timeline != (int)CONSTANT_TIMELINE) {
+        memcpy(buffer, buffers[before], sizeof(unsigned char) * EFFECT_LENGTH);
+        memcpy(buffers[before], buffers[after], sizeof(unsigned char) * EFFECT_LENGTH);
+        memcpy(buffers[after], buffer, sizeof(unsigned char) * EFFECT_LENGTH);
       }
       
-      Monitor::setProperty(&other->type, effect->type);
-      Monitor::setProperty(&effect->type, type);
+      Monitor::setProperty(&other->type, before);
+      Monitor::setProperty(&effect->type, after);
       return;
     }
   }
   
-  if (effect->timeline != (int)CONSTANT_TIMELINE) {
-    memcpy(buffer, mod.buffers[effect->timeline][effect->type], sizeof(unsigned char) * EFFECT_LENGTH);
+  if (timeline != (int)CONSTANT_TIMELINE) {
+    memcpy(buffer, mod.buffers[timeline][before], sizeof(unsigned char) * EFFECT_LENGTH);
   }
   
-  setDepth(type, effect->timeline, oldDepth);
+  setDepth(after, timeline, oldDepth);
   
-  setEffectEnabled(effect->type, effect->timeline, false);
-  Monitor::setProperty(&effect->type, type);
-  setEffectEnabled(effect->type, effect->timeline, true);
+  setEffectEnabled(before, timeline, false);
+  Monitor::setProperty(&effect->type, after);
+  setEffectEnabled(after, timeline, true);
   
-  if (effect->timeline != (int)CONSTANT_TIMELINE) {
-    memcpy(mod.buffers[effect->timeline][effect->type], buffer, sizeof(unsigned char) * EFFECT_LENGTH);
+  if (timeline != (int)CONSTANT_TIMELINE) {
+    memcpy(mod.buffers[timeline][after], buffer, sizeof(unsigned char) * EFFECT_LENGTH);
   }
 }

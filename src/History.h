@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __HISTORY_H__ 
-#define __HISTORY_H__ 
+#ifndef HISTORY_H 
+#define HISTORY_H 
 
 #include <vector>
 #include "Change.h"
@@ -41,4 +41,4 @@ private:
   int index;
 };
 
-#endif // __HISTORY_H__ 
+#endif // HISTORY_H 

@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __AUDIO_CALLBACK_H__ 
-#define __AUDIO_CALLBACK_H__ 
+#ifndef AUDIO_CALLBACK_H 
+#define AUDIO_CALLBACK_H 
 
 #include <stdlib.h>
 #include <portaudio.h>
@@ -48,4 +48,4 @@ int audioCallback( const void *inputBuffer, void *outputBuffer,
                    PaStreamCallbackFlags statusFlags,
                    void *userData );
 
-#endif // __AUDIO_CALLBACK_H__ 
+#endif // AUDIO_CALLBACK_H 

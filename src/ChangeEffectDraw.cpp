@@ -25,27 +25,30 @@
 
 #include <memory.h>
 #include "Monitor.h"
-#include "ChangeOscillatorDraw.h"
+#include "ChangeEffectDraw.h"
 
 
-ChangeOscillatorDraw::ChangeOscillatorDraw(Instrument* inst, unsigned char* address, int size, bool noise)
+ChangeEffectDraw::ChangeEffectDraw(Instrument* inst, char timeline, char type)
   : Change(false)
 {
   this->inst = inst;
-  this->address = address;
-  this->size = size;
-  this->noise = noise;
-  this->buffer = (unsigned char*) malloc(sizeof(unsigned char) * size);
+  this->timeline = timeline;
+  this->type = type;
+  this->before = (unsigned char*) malloc(sizeof(unsigned char) * EFFECT_LENGTH);
+  this->after = (unsigned char*) malloc(sizeof(unsigned char) * EFFECT_LENGTH);
   
-  lowestIndex = size;
+  lowestIndex = EFFECT_LENGTH;
   highestIndex = -1;
 }
 
-ChangeOscillatorDraw::~ChangeOscillatorDraw() {
-  free(buffer);
+ChangeEffectDraw::~ChangeEffectDraw() {
+  free(before);
+  free(after);
 }
 
-void ChangeOscillatorDraw::update(int prevIndex, int nextIndex, float value) {
+void ChangeEffectDraw::update(int prevIndex, int nextIndex, float value) {
+  unsigned char* buffer = inst->copyEffectBuffer(type, timeline);
+  
   int bottomIndex, topIndex;
   float bottomValue, topValue, delta;
   if (prevIndex == -1) {
@@ -55,28 +58,23 @@ void ChangeOscillatorDraw::update(int prevIndex, int nextIndex, float value) {
   } else if (prevIndex < nextIndex) {
     bottomIndex = prevIndex;
     topIndex = nextIndex;
-    bottomValue = address[bottomIndex];
+    bottomValue = buffer[bottomIndex];
     topValue = value;
   } else {
     bottomIndex = nextIndex;
     topIndex = prevIndex;
     bottomValue = value;
-    topValue = address[topIndex];
+    topValue = buffer[topIndex];
   }
   delta = (topValue - bottomValue) / ((float) topIndex - (float) bottomIndex);
   for (int i = bottomIndex; i <= topIndex; i++) {
-    if (i < lowestIndex || i > highestIndex) buffer[i] = address[i];
-    address[i] = bottomValue;
+    if (i < lowestIndex || i > highestIndex) before[i] = buffer[i];
+    buffer[i] = bottomValue;
+    after[i] = bottomValue;
     bottomValue += delta;
   }
   
-  if (noise) {
-    NoiseSpectrum_updateRange(&inst->oscillator.noise, 
-                              (float) (bottomIndex-1) / (float) NOISE_SAMPLES_PER_OCTAVE - SUB_OCTAVES,
-                              (float) (topIndex + 1)  / (float) NOISE_SAMPLES_PER_OCTAVE - SUB_OCTAVES);
-  }
-  inst->oscillator.dirty = true;
-  inst->markDirty();
+  inst->replaceEffectBuffer(type, timeline, buffer);
   
   if (bottomIndex < lowestIndex) lowestIndex = bottomIndex;
   if (topIndex > highestIndex) highestIndex = topIndex;
@@ -84,25 +82,14 @@ void ChangeOscillatorDraw::update(int prevIndex, int nextIndex, float value) {
   didAnything = true;
 }
 
-void ChangeOscillatorDraw::swap() {
-  for (int i = lowestIndex; i <= highestIndex; i++) {
-    unsigned char temp = address[i];
-    address[i] = buffer[i];
-    buffer[i] = temp;
-  }
-  if (noise) {
-    NoiseSpectrum_updateRange(&inst->oscillator.noise, 
-                              (float) (lowestIndex - 1) / (float) NOISE_SAMPLES_PER_OCTAVE - SUB_OCTAVES,
-                              (float) (highestIndex +1) / (float) NOISE_SAMPLES_PER_OCTAVE - SUB_OCTAVES);
-  }
-  inst->oscillator.dirty = true;
-  inst->markDirty();
+void ChangeEffectDraw::doForwards() {
+  unsigned char* buffer = inst->copyEffectBuffer(type, timeline);
+  memcpy(&buffer[lowestIndex], &after[lowestIndex], (highestIndex - lowestIndex + 1) * sizeof(unsigned char));
+  inst->replaceEffectBuffer(type, timeline, buffer);
 }
 
-void ChangeOscillatorDraw::doForwards() {
-  swap();
-}
-
-void ChangeOscillatorDraw::doBackwards() {
-  swap();
+void ChangeEffectDraw::doBackwards() {
+  unsigned char* buffer = inst->copyEffectBuffer(type, timeline);
+  memcpy(&buffer[lowestIndex], &before[lowestIndex], (highestIndex - lowestIndex + 1) * sizeof(unsigned char));
+  inst->replaceEffectBuffer(type, timeline, buffer);
 }

@@ -23,23 +23,24 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __CHANGE_EFFECT_CREATE_H__ 
-#define __CHANGE_EFFECT_CREATE_H__ 
+#ifndef CHANGE_EFFECT_CREATE_H 
+#define CHANGE_EFFECT_CREATE_H 
 
 #include "Change.h"
 #include "Instrument.h"
 
 class ChangeEffectCreate : public Change {
 public:
-  ChangeEffectCreate(Instrument* inst, char type, char timeline, bool destroy);
+  ChangeEffectCreate(Instrument* inst, char timeline, char type = -1);
+  virtual ~ChangeEffectCreate();
 protected:
   virtual void doForwards();
   virtual void doBackwards();
   Instrument* inst;
-  char type;
   char timeline;
+  char type;
   unsigned char* buffer;
   unsigned char depth;
 };
 
-#endif // __CHANGE_EFFECT_CREATE_H__ 
+#endif // CHANGE_EFFECT_CREATE_H 

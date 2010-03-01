@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __MODULATOR_H__ 
-#define __MODULATOR_H__ 
+#ifndef MODULATOR_H 
+#define MODULATOR_H 
 
 #ifdef __cplusplus
 extern "C" {
@@ -125,4 +125,4 @@ typedef struct ModulatorSharer {
 }
 #endif
 
-#endif // __MODULATOR_H__ 
+#endif // MODULATOR_H 

@@ -23,12 +23,13 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __CHANGE_H__ 
-#define __CHANGE_H__ 
+#ifndef CHANGE_H 
+#define CHANGE_H 
 
 class Change {
 public:
   Change(bool reversed);
+  virtual ~Change();
   bool didNothing();
   void undo();
   void redo();
@@ -40,4 +41,4 @@ private:
   bool reversed;
 };
 
-#endif // __CHANGE_H__ 
+#endif // CHANGE_H 

@@ -46,7 +46,7 @@ void Monitor::removeCallback(void* prop, void* thisptr) {
   if (monitors.find(prop) != monitors.end()) {
     monitor = monitors[prop];
   } else {
-    //assert
+    printf("Monitor::removeCallback() - Attempting to remove nonexistent callback.\n");
   }
   std::list<CallbackBase*>::iterator iter = monitor->callbacks.begin();
   while (iter != monitor->callbacks.end()) {

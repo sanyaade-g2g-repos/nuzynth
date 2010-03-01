@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _WHEEL_CATCHER_H_ 
-#define _WHEEL_CATCHER_H_ 
+#ifndef WHEEL_CATCHER_H
+#define WHEEL_CATCHER_H
 
 #include <wx/wx.h>
 
@@ -38,4 +38,4 @@ private:
 DECLARE_EVENT_TABLE()
 };
 
-#endif // _WHEEL_CATCHER_H_ 
+#endif // WHEEL_CATCHER_H

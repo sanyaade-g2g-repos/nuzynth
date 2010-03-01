@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __AUDIO_H__ 
-#define __AUDIO_H__ 
+#ifndef AUDIO_H 
+#define AUDIO_H 
 
 #include <portaudio.h>
 //#include <assert.h>
@@ -40,4 +40,4 @@ int audio_setup(PaStreamCallback* callback);
 
 int audio_tearDown();
 
-#endif // __AUDIO_H__ 
+#endif // AUDIO_H 

@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __MIDI_H__ 
-#define __MIDI_H__ 
+#ifndef MIDI_H 
+#define MIDI_H 
 
 #include <stdio.h>
 //#include <portmidi.h>
@@ -57,4 +57,4 @@ bool midi_poll(bool* wasANote, bool* wasANoteStart, unsigned char* pitchIndex);
 // A utility function to convert from MIDI pitch index into hertz, assuming no pitch bend:
 float midi_frequencyFromPitchIndex(unsigned char pitchIndex);
 
-#endif // __MIDI_H__ 
+#endif // MIDI_H 

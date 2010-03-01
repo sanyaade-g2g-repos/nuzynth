@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __OSCILLATOR_H__
-#define __OSCILLATOR_H__
+#ifndef OSCILLATOR_H
+#define OSCILLATOR_H
 
 #include "Modulator.h"
 #include "HarmonicSet.h"
@@ -41,4 +41,4 @@ struct Oscillator {
 void Oscillator_init(Oscillator* oscillator);
 void Oscillator_renderWave(Oscillator* oscillator, float* wave);
 
-#endif // __OSCILLATOR_H__
+#endif // OSCILLATOR_H

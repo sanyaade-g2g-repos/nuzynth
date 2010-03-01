@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _MY_APP_H_
-#define _MY_APP_H_
+#ifndef MY_APP_H
+#define MY_APP_H
 
 #include <wx/wx.h>
 #include "MyFrame.h"
@@ -49,4 +49,4 @@ public:
   DECLARE_EVENT_TABLE()
 };
 
-#endif // _MY_APP_H_
+#endif // MY_APP_H

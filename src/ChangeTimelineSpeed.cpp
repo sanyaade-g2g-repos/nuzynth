@@ -23,15 +23,29 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef EFFECT_H
-#define EFFECT_H
+#include <memory.h>
+#include "Monitor.h"
+#include "ChangeTimelineSpeed.h"
 
-class Instrument;
-struct Effect {
-public:
-  Instrument* inst;
-  char type;
-  char timeline;
-};
 
-#endif // EFFECT_H
+ChangeTimelineSpeed::ChangeTimelineSpeed(Instrument* inst, char timeline, unsigned char value)
+  : Change(false)
+{
+  this->inst = inst;
+  this->timeline = timeline;
+  before = inst->mod.speeds[timeline];
+  after = value;
+  didAnything = (before != after);
+  
+  doForwards();
+}
+
+ChangeTimelineSpeed::~ChangeTimelineSpeed() {}
+
+void ChangeTimelineSpeed::doForwards() {
+  inst->setSpeed(timeline, after);
+}
+
+void ChangeTimelineSpeed::doBackwards() {
+  inst->setSpeed(timeline, before);
+}

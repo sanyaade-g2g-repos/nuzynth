@@ -57,6 +57,8 @@ EffectCanvas::EffectCanvas(Effect* effect,
 {
   prevIndex = 0;
   this->effect = 0;
+  change = 0;
+  effectType = -1;
   setEffect(effect);
   mouseInside = false;
   margin = 2;
@@ -156,7 +158,8 @@ void EffectCanvas::OnLeftMouseDown(wxMouseEvent& event) {
   getIndexValue(index, value, event);
   prevIndex = index;
   
-  effect->inst->draw(effect->type, effect->timeline, prevIndex, index, value);
+  change = new ChangeEffectDraw(effect->inst, effect->timeline, effect->type);
+  change->update(prevIndex, index, value * 254.0f);
   
   Refresh();
   
@@ -167,6 +170,8 @@ void EffectCanvas::OnLeftMouseDown(wxMouseEvent& event) {
 }
 void EffectCanvas::OnLeftMouseUp(wxMouseEvent& event) {
   if (HasCapture()) {
+    effect->inst->song->history.record(change);
+    change = 0;
     ReleaseMouse();
   }
   //event.Skip();
@@ -183,7 +188,7 @@ void EffectCanvas::OnMouseMove(wxMouseEvent& event) {
   float value;
   getIndexValue(index, value, event);
   
-  effect->inst->draw(effect->type, effect->timeline, prevIndex, index, value);
+  change->update(prevIndex, index, value * 254.0f);
   
   prevIndex = index;
   
@@ -220,27 +225,48 @@ event.RightDClick() // returns true if was a double click event
 */
 
 void EffectCanvas::setEffect(Effect* effect) {
-  detachOldCallback();
+  detachEffectBufferCallback();
+  detachEffectTypeCallback();
   
   this->effect = effect;
   
   if (effect != 0) {
-    /*
-    Monitor::addCallback( &m_bufferList[m_modifier], 
-                          new Callback<unsigned char*, EffectCanvas>
-                            (this, &EffectCanvas::bufferUpdated) );
-    */
+    Monitor::addCallback( &effect->type, 
+                          new Callback<char, EffectCanvas>
+                            (this, &EffectCanvas::onEffectTypeChanged) );
+    onEffectTypeChanged((char*) 0);
   }
   Refresh();
 }
 
-void EffectCanvas::detachOldCallback() {
+void EffectCanvas::detachEffectTypeCallback() {
   if (effect != 0) {
-    //Monitor::removeCallback( (void*)(&m_bufferList[m_modifier]), this );
+    Monitor::removeCallback( (void*)(&effect->type), this );
   }
   effect = 0;
 }
 
-void EffectCanvas::bufferUpdated(unsigned char** buffer) {
+void EffectCanvas::onEffectTypeChanged(char* unused) {
+  detachEffectBufferCallback();
+  
+  effectType = effect->type;
+  
+  if (effectType != -1) {
+    Monitor::addCallback( &effect->inst->mod.buffers[effect->timeline][effectType], 
+                          new Callback<unsigned char*, EffectCanvas>
+                            (this, &EffectCanvas::onBufferChanged) );
+  }
+  Refresh();
+}
+
+void EffectCanvas::detachEffectBufferCallback() {
+  if (effectType != -1) {
+    Monitor::removeCallback( (void*)(&effect->inst->mod.buffers[effect->timeline][effectType]), 
+                             this );
+  }
+  effectType = -1;
+}
+
+void EffectCanvas::onBufferChanged(unsigned char** buffer) {
   Refresh();
 }

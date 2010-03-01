@@ -23,12 +23,12 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __SINGLY_LINKED_LIST_H__ 
-#define __SINGLY_LINKED_LIST_H__ 
+#ifndef SINGLY_LINKED_LIST_H
+#define SINGLY_LINKED_LIST_H
 
 struct SinglyLinkedList {
   SinglyLinkedList* next;
   void* val;
 };
 
-#endif // __SINGLY_LINKED_LIST_H__ 
+#endif // SINGLY_LINKED_LIST_H

@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SONG_CANVAS_H_ 
-#define _SONG_CANVAS_H_ 
+#ifndef SONG_CANVAS_H
+#define SONG_CANVAS_H
 
 #include "wx/wx.h"
 #if !wxUSE_GLCANVAS
@@ -57,4 +57,4 @@ private:
 DECLARE_EVENT_TABLE()
 };
 
-#endif // _SONG_CANVAS_H_ 
+#endif // SONG_CANVAS_H

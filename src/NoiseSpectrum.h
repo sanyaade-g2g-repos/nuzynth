@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __NOISE_SPECTRUM_H__
-#define __NOISE_SPECTRUM_H__
+#ifndef NOISE_SPECTRUM_H
+#define NOISE_SPECTRUM_H
 
 #include "Modulator.h"
 #include <fftw3.h>
@@ -42,4 +42,4 @@ void NoiseSpectrum_init(NoiseSpectrum* noise);
 void NoiseSpectrum_updateAll(NoiseSpectrum* noise);
 void NoiseSpectrum_updateRange(NoiseSpectrum* noise, float lowerOctave, float upperOctave);
 
-#endif // __NOISE_SPECTRUM_H__
+#endif // NOISE_SPECTRUM_H

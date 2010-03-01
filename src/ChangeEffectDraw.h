@@ -23,15 +23,28 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef EFFECT_H
-#define EFFECT_H
+#ifndef CHANGE_EFFECT_DRAW_H
+#define CHANGE_EFFECT_DRAW_H
 
-class Instrument;
-struct Effect {
+#include "Change.h"
+#include "Instrument.h"
+
+class ChangeEffectDraw : public Change {
 public:
+  ChangeEffectDraw(Instrument* inst, char timeline, char type);
+  virtual ~ChangeEffectDraw();
+  void update(int prevIndex, int nextIndex, float value);
+protected:
+  virtual void doForwards();
+  virtual void doBackwards();
   Instrument* inst;
-  char type;
   char timeline;
+  char type;
+  unsigned char* before;
+  unsigned char* after;
+  int lowestIndex;
+  int highestIndex;
+  int prevIndex;
 };
 
-#endif // EFFECT_H
+#endif // CHANGE_EFFECT_DRAW_H

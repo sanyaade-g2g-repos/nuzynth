@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __OSCILLATOR_PANEL_H__ 
-#define __OSCILLATOR_PANEL_H__ 
+#ifndef OSCILLATOR_PANEL_H
+#define OSCILLATOR_PANEL_H
 
 #include <wx/wx.h>
 #include "Instrument.h"
@@ -77,4 +77,4 @@ enum {
   STRETCH_SLIDER,
 };
 
-#endif // __OSCILLATOR_PANEL_H__ 
+#endif // OSCILLATOR_PANEL_H

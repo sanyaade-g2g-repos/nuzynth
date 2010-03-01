@@ -23,40 +23,46 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _EFFECT_PANEL_H_ 
-#define _EFFECT_PANEL_H_ 
+#ifndef EFFECT_PANEL_H
+#define EFFECT_PANEL_H
 
 #include <wx/wx.h>
 #include <wx/choice.h>
 #include "EffectCanvas.h"
 #include "Instrument.h"
 #include "TimelinePanel.h"
+#include "ChangeEffectCreate.h"
+#include "ChangeSwitchEffect.h"
+#include "ChangeEffectDepth.h"
 
 // Define a new frame type: this is going to be our main frame
 class EffectPanel : public wxPanel {
 public:
   EffectPanel(wxScrolledWindow* scrollMe, Effect* effect, bool isConstant, TimelinePanel *parent, wxWindowID id);
   ~EffectPanel();
+  Effect* effect;
   
 private:
   
   void OnSliderUpdate( wxScrollEvent &event );
+  void OnSliderFinish( wxScrollEvent &event );
+  
   void OnChoiceUpdate( wxCommandEvent &event );
   void typeChangedCallback(char* effect);
+  void depthChangedCallback(unsigned char* val);
   bool isFinite();
   
   //void selectModifier(int modifier);
   
-  TimelinePanel* timelineParent;
-  Effect* effect;
-  wxScrolledWindow* scrollMe;
-  int timeline;
-  bool isConstant;
-  
-  wxChoice        *effectTypeChoice;
-  wxSlider        *depthSlider;
-  EffectCanvas    *effectCanvas;
-  wxBoxSizer      *sliderBox;
+  char               oldType;
+  TimelinePanel*     timelineParent;
+  wxScrolledWindow*  scrollMe;
+  bool               isConstant;
+  ChangeEffectDepth *depthChange;
+  wxChoice          *effectTypeChoice;
+  wxSlider          *depthSlider;
+  EffectCanvas      *effectCanvas;
+  wxBoxSizer        *sliderBox;
   
   // any class wishing to process wxWidgets events must use this macro
   DECLARE_EVENT_TABLE()
@@ -65,8 +71,8 @@ private:
 
 enum {
   EFFECT_TYPE_CHOICE = wxID_HIGHEST,
-  DEPTH_SLIDER,
   EFFECT_CANVAS,
+  DEPTH_SLIDER,
 };
 
-#endif // _EFFECT_PANEL_H_ 
+#endif // EFFECT_PANEL_H

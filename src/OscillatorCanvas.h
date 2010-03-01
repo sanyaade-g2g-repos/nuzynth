@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _OSCILLATOR_CANVAS_H_ 
-#define _OSCILLATOR_CANVAS_H_ 
+#ifndef OSCILLATOR_CANVAS_H
+#define OSCILLATOR_CANVAS_H
 
 #include <wx/wx.h>
 
@@ -80,4 +80,4 @@ private:
 DECLARE_EVENT_TABLE()
 };
 
-#endif // _OSCILLATOR_CANVAS_H_ 
+#endif // OSCILLATOR_CANVAS_H

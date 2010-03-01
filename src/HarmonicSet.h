@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _HARMONIC_SET_H_
-#define _HARMONIC_SET_H_
+#ifndef HARMONIC_SET_H
+#define HARMONIC_SET_H
 
 #define MAX_HARMONICS (0x40)
 #define NUM_VOICES    (5)
@@ -42,4 +42,4 @@ struct HarmonicSet {
 void HarmonicSet_init(HarmonicSet* set, bool silent);
 void HarmonicSet_updateFreqs(HarmonicSet* set);
 
-#endif // _HARMONIC_SET_H_
+#endif // HARMONIC_SET_H

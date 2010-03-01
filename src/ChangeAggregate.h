@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __CHANGE_AGGREGATE_H__ 
-#define __CHANGE_AGGREGATE_H__ 
+#ifndef CHANGE_AGGREGATE_H 
+#define CHANGE_AGGREGATE_H 
 
 #include "Change.h"
 
@@ -39,7 +39,7 @@ protected:
   std::vector<Change*> changes;
 };
 
-#endif // __CHANGE_AGGREGATE_H__ 
+#endif // CHANGE_AGGREGATE_H 
 
 
 

@@ -23,15 +23,23 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef EFFECT_H
-#define EFFECT_H
+#ifndef CHANGE_TIMELINE_SPEED_H
+#define CHANGE_TIMELINE_SPEED_H
 
-class Instrument;
-struct Effect {
+#include "Change.h"
+#include "Instrument.h"
+
+class ChangeTimelineSpeed : public Change {
 public:
+  ChangeTimelineSpeed(Instrument* inst, char timeline, unsigned char value);
+  virtual ~ChangeTimelineSpeed();
+protected:
+  virtual void doForwards();
+  virtual void doBackwards();
   Instrument* inst;
-  char type;
   char timeline;
+  unsigned char before;
+  unsigned char after;
 };
 
-#endif // EFFECT_H
+#endif // CHANGE_TIMELINE_SPEED_H

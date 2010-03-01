@@ -23,13 +23,14 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _TIMELINE_PANEL_H_ 
-#define _TIMELINE_PANEL_H_ 
+#ifndef TIMELINE_PANEL_H
+#define TIMELINE_PANEL_H
 
 #include <stdlib.h>
 #include <wx/wx.h>
 #include "WheelCatcher.h"
 #include "Instrument.h"
+#include "ChangeTimelineSpeed.h"
 
 class EffectPanel;
 
@@ -53,6 +54,8 @@ private:
   void destroyChild(EffectPanel* child);
   void OnAddPressed( wxCommandEvent &event );
   void OnSliderUpdate( wxScrollEvent &event );
+  void OnSliderFinish( wxScrollEvent &event );
+  void speedChangedCallback(unsigned char* val);
   
   wxButton         *addButton;
   wxSlider         *speedSlider;
@@ -60,6 +63,7 @@ private:
   wxBoxSizer       *effectBox;
   wxStaticBoxSizer *topBox;
   std::vector<EffectPanel*> children;
+  ChangeTimelineSpeed *speedChange;
   
   // any class wishing to process wxWidgets events must use this macro
   DECLARE_EVENT_TABLE()
@@ -70,4 +74,4 @@ enum {
   SPEED_SLIDER,
 };
 
-#endif // _TIMELINE_PANEL_H_ 
+#endif // TIMELINE_PANEL_H

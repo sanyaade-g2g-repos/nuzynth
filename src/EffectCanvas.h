@@ -23,12 +23,13 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _EFFECT_CANVAS_H_ 
-#define _EFFECT_CANVAS_H_ 
+#ifndef EFFECT_CANVAS_H
+#define EFFECT_CANVAS_H
 
 #include <wx/wx.h>
 
 #include "Instrument.h"
+#include "ChangeEffectDraw.h"
 
 class EffectCanvas: public wxWindow
 {
@@ -59,14 +60,19 @@ private:
   void OnMouseCaptureLost(wxMouseCaptureLostEvent& event);
   
   Effect* effect;
+  ChangeEffectDraw* change;
+  int effectType;
   int prevIndex;
   int margin;
   bool mouseInside;
-  void bufferUpdated(unsigned char** buffer);
-  void detachOldCallback();
+  void detachEffectTypeCallback();
+  void onEffectTypeChanged(char* unused);
+  void detachEffectBufferCallback();
+  void onBufferChanged(unsigned char** buffer);
+  
   void getIndexValue(int& index, float& value, wxMouseEvent& event);
   
 DECLARE_EVENT_TABLE()
 };
 
-#endif // _EFFECT_CANVAS_H_ 
+#endif // EFFECT_CANVAS_H

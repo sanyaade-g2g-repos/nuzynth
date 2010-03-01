@@ -27,7 +27,8 @@
 #include "Monitor.h"
 
 BEGIN_EVENT_TABLE(EffectPanel, wxPanel)
-  EVT_COMMAND_SCROLL (DEPTH_SLIDER, EffectPanel::OnSliderUpdate)
+  EVT_COMMAND_SCROLL_THUMBTRACK (DEPTH_SLIDER, EffectPanel::OnSliderUpdate)
+  EVT_COMMAND_SCROLL_THUMBRELEASE (DEPTH_SLIDER, EffectPanel::OnSliderFinish)
   EVT_CHOICE    (EFFECT_TYPE_CHOICE, EffectPanel::OnChoiceUpdate)
 END_EVENT_TABLE()
 
@@ -37,6 +38,7 @@ EffectPanel::EffectPanel(wxScrolledWindow* scrollMe, Effect* effect, bool isCons
   this->isConstant = isConstant;
   this->effect = effect;
   this->scrollMe = scrollMe;
+  depthChange = 0;
   PushEventHandler(new WheelCatcher(scrollMe));
   
   wxBoxSizer *vBox;
@@ -90,26 +92,32 @@ EffectPanel::EffectPanel(wxScrolledWindow* scrollMe, Effect* effect, bool isCons
   Monitor::addCallback( &effect->type, 
                         new Callback<char, EffectPanel>
                           (this, &EffectPanel::typeChangedCallback) );
+  oldType = effect->type;
+  Monitor::addCallback( &effect->inst->mod.depths[effect->timeline][effect->type], 
+                        new Callback<unsigned char, EffectPanel>
+                          (this, &EffectPanel::depthChangedCallback) );
 }
 
 EffectPanel::~EffectPanel() {
   Monitor::removeCallback( (void*)(&effect->type), this );
+  Monitor::removeCallback( (void*)(&effect->inst->mod.depths[effect->timeline][effect->type]), this );
   if (effectCanvas != 0) effectCanvas->setEffect(0); // detach callbacks
 }
 
 void EffectPanel::OnChoiceUpdate( wxCommandEvent &event ) {
   //if (m_inst == 0) return;
   int val = event.GetSelection();
+  Instrument* inst = effect->inst;
   switch (event.GetId()) {
     case EFFECT_TYPE_CHOICE:
       if (val != NUM_EFFECT_TYPES) {
-        effect->inst->switchEffectType(effect, val);
+        inst->song->history.record(new ChangeSwitchEffect(inst, effect->timeline, effect->type, val));
       } else {
         // Destroy!
-        Effect* temp = effect;
-        //timelineParent->destroyChild(this);
-        // DO NOT ACCESS MEMBER VARIABLES AFTER DESTRUCTION!!!
-        if (temp != 0) temp->inst->destroyEffect(temp);
+        if (effect != 0) {
+          inst->song->history.record(new ChangeEffectCreate(inst, effect->timeline, effect->type));
+          // DO NOT ACCESS MEMBER VARIABLES AFTER DESTRUCTION!!!
+        }
         return;
       }
       break;
@@ -117,29 +125,53 @@ void EffectPanel::OnChoiceUpdate( wxCommandEvent &event ) {
 }
 
 void EffectPanel::OnSliderUpdate( wxScrollEvent& event ) {
-  //int val = m_slider->GetValue();
   int val = event.GetSelection();
   switch (event.GetId()) {
     case DEPTH_SLIDER:
-      effect->inst->setDepth(effect->type, effect->timeline, val);
+      if (depthChange != 0) {
+        depthChange->undo();
+        delete depthChange;
+        depthChange = 0;
+      }
+      depthChange = new ChangeEffectDepth(effect->inst, effect->timeline, effect->type, val);
       break;
   }
   Instrument::cleanAllDirt();
 }
 
+void EffectPanel::OnSliderFinish( wxScrollEvent& event ) {
+  switch (event.GetId()) {
+    case DEPTH_SLIDER:
+      effect->inst->song->history.record(depthChange);
+      depthChange = 0;
+      break;
+  }
+}
+
 void EffectPanel::typeChangedCallback(char* type) {
+  
+  Monitor::removeCallback( (void*)(&effect->inst->mod.depths[effect->timeline][oldType]), this );
+  Monitor::addCallback( &effect->inst->mod.depths[effect->timeline][effect->type], 
+                        new Callback<unsigned char, EffectPanel>
+                          (this, &EffectPanel::depthChangedCallback) );
+  oldType = effect->type;
   effectTypeChoice->Select(effect->type);
   if (isConstant == false) {
     if (isFinite()) {
       sliderBox->Show(true);
     } else {
       sliderBox->Show(false);
+      depthSlider->SetValue(effect->inst->getDepth(effect->type, effect->timeline));
     }
   }
   wxSizer* parentSizer = GetParent()->GetContainingSizer();
   wxWindow* parentWindow = GetParent()->GetParent();
   parentWindow->SetVirtualSizeHints(0,0);
   parentSizer->SetVirtualSizeHints(parentWindow);
+}
+
+void EffectPanel::depthChangedCallback(unsigned char* val) {
+  depthSlider->SetValue(effect->inst->getDepth(effect->type, effect->timeline));
 }
 
 bool EffectPanel::isFinite() {

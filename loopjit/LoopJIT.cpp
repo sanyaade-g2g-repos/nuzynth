@@ -180,7 +180,7 @@ void* RunLoopJIT(LoopOptions loopOptions) {
   PM.run(*Mod);
   FPM.run(*optimizedLoop);
   
-  Mod->dump();
+  //Mod->dump();
   printf("Ran LoopJIT\n");
   
   // Build and run:

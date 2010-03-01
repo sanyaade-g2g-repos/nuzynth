@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _MY_FRAME_H_
-#define _MY_FRAME_H_
+#ifndef MY_FRAME_H
+#define MY_FRAME_H
 
 #include <wx/wx.h>
 #include <wx/spinctrl.h>
@@ -74,4 +74,4 @@ enum {
     STOP_BUTTON,
 };
 
-#endif // _MY_FRAME_H_
+#endif // MY_FRAME_H

@@ -30,6 +30,8 @@ Change::Change(bool reversed) {
   didAnything = false;
 }
 
+Change::~Change() {}
+
 bool Change::didNothing() {
   return !didAnything;
 }

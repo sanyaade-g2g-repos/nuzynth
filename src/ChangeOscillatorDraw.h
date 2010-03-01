@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __CHANGE_OSCILLATOR_DRAW_H__ 
-#define __CHANGE_OSCILLATOR_DRAW_H__ 
+#ifndef CHANGE_OSCILLATOR_DRAW_H 
+#define CHANGE_OSCILLATOR_DRAW_H 
 
 #include "Change.h"
 #include "Instrument.h"
@@ -32,6 +32,7 @@
 class ChangeOscillatorDraw : public Change {
 public:
   ChangeOscillatorDraw(Instrument* inst, unsigned char* address, int size, bool noise);
+  virtual ~ChangeOscillatorDraw();
   void update(int prevIndex, int nextIndex, float value);
 protected:
   virtual void swap();
@@ -46,4 +47,4 @@ protected:
   int highestIndex;
 };
 
-#endif // __CHANGE_OSCILLATOR_DRAW_H__ 
+#endif // CHANGE_OSCILLATOR_DRAW_H 

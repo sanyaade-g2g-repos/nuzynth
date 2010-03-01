@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _INSTRUMENT_H_
-#define _INSTRUMENT_H_
+#ifndef INSTRUMENT_H
+#define INSTRUMENT_H
 
 #include <stdio.h>
 #include <vector>
@@ -58,21 +58,28 @@ public:
   Instrument(Song* song);
   Instrument(Song* song, FILE* file);
   ~Instrument();
+  
   void save(FILE* file);
-  void prepareToDie();
-  static void cleanAllDirt();
-  void clean();
   void updateWave();
   unsigned char getDepth(int type, int timeline);
   void setDepth(int type, int timeline, unsigned char val);
   unsigned char getSpeed(int timeline);
   void setSpeed(int timeline, unsigned char val);
-  void draw(int effect, int timeline, int prevIndex, int nextIndex, float value);
   int findUnusedEffectType(int timeline);
   Effect* createEffect(int timeline);
-  void destroyEffect(Effect* mod);
-  void switchEffectType(Effect* effect, char type);
+  void destroyEffect(Effect* effect);
+  void switchEffectType(char timeline, char before, char after);
   void getChoicesForEffect(Effect* effect, bool* flags);
+  unsigned char* copyEffectBuffer(int effect, int timeline);
+  void replaceEffectBuffer(int effect, int timeline, unsigned char* newBuffer);
+  
+  static Pool* effectPool();
+  static Pool* wavePool();
+  static Pool* modulatorPool();
+  
+  void prepareToDie();
+  static void cleanAllDirt();
+  void clean();
   void markDirty();
   
 private:
@@ -84,10 +91,6 @@ private:
   void setDefaultValues();
   void readCommaSeparatedChars(unsigned char* dest, int maxCount, const char* ascii);
   void setEffectEnabled(int type, int timeline, bool enable);
-  
-  static Pool* effectPool();
-  static Pool* wavePool();
-  static Pool* modulatorPool();
 };
 
-#endif // _INSTRUMENT_H_
+#endif // INSTRUMENT_H

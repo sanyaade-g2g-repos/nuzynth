@@ -23,15 +23,28 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef EFFECT_H
-#define EFFECT_H
+#include <memory.h>
+#include "Monitor.h"
+#include "ChangeSwitchEffect.h"
 
-class Instrument;
-struct Effect {
-public:
-  Instrument* inst;
-  char type;
-  char timeline;
-};
 
-#endif // EFFECT_H
+ChangeSwitchEffect::ChangeSwitchEffect(Instrument* inst, char timeline, char before, char after)
+  : Change(false)
+{
+  this->inst = inst;
+  this->timeline = timeline;
+  this->before = before;
+  this->after = after;
+  didAnything = true;
+  doForwards();
+}
+
+ChangeSwitchEffect::~ChangeSwitchEffect() {}
+
+void ChangeSwitchEffect::doForwards() {
+  inst->switchEffectType(timeline, before, after);
+}
+
+void ChangeSwitchEffect::doBackwards() {
+  inst->switchEffectType(timeline, after, before);
+}

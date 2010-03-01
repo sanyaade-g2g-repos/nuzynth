@@ -28,24 +28,60 @@
 #include "ChangeEffectCreate.h"
 
 
-ChangeEffectCreate::ChangeEffectCreate(Instrument* inst, char type, char timeline, bool destroy)
-  : Change(false)
+ChangeEffectCreate::ChangeEffectCreate(Instrument* inst, char timeline, char type)
+  : Change(type != -1)
 {
   this->inst = inst;
-  this->type = type;
   this->timeline = timeline;
-  //this->depth = ;
   
-  /// TODO: make a destructor and free this:
-  this->buffer = (unsigned char*) malloc(sizeof(unsigned char) * EFFECT_LENGTH);
+  bool destroy;
+  
+  if (type == -1) {
+    Effect* effect = inst->createEffect(timeline);
+    type = effect->type;
+    destroy = false;
+  } else {
+    destroy = true;
+  }
+  
+  this->type = type;
+  depth = inst->mod.depths[timeline][type];
+  if ((int)timeline != CONSTANT_TIMELINE) {
+    buffer = (unsigned char*) malloc(sizeof(unsigned char) * EFFECT_LENGTH);
+    memcpy(buffer, inst->mod.buffers[timeline][type], EFFECT_LENGTH * sizeof(unsigned char));
+  } else {
+    buffer = 0;
+  }
   
   didAnything = true;
+  
+  if (destroy) {
+    doBackwards();
+  }
+}
+
+ChangeEffectCreate::~ChangeEffectCreate() {
+  if (buffer != 0) {
+    free(buffer);
+  }
 }
 
 void ChangeEffectCreate::doForwards() {
-  //swap();
+  Effect* effect = inst->createEffect(timeline);
+  unsigned char* newBuffer = (unsigned char*) Pool_draw(Instrument::effectPool());
+  memcpy(newBuffer, buffer, EFFECT_LENGTH * sizeof(unsigned char));
+  inst->replaceEffectBuffer(type, timeline, newBuffer);
+  inst->setDepth(type, timeline, depth);
 }
 
 void ChangeEffectCreate::doBackwards() {
-  //swap();
+  Effect* effect;
+  for (int i = 0; i < inst->timelines[timeline].size(); i++) {
+    Effect* iter = inst->timelines[timeline][i];
+    if (iter->type == type) {
+      effect = iter;
+      break;
+    }
+  }
+  inst->destroyEffect(effect);
 }

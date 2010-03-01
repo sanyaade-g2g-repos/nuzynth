@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __MONITOR_H__ 
-#define __MONITOR_H__ 
+#ifndef MONITOR_H 
+#define MONITOR_H 
 
 #include "Callback.h"
 #include <map>
@@ -57,4 +57,4 @@ public:
   }
 };
 
-#endif // __MONITOR_H__ 
+#endif // MONITOR_H 

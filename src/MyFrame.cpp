@@ -187,16 +187,6 @@ void MyFrame::OnQuit(wxCommandEvent& WXUNUSED(event)) {
 
 void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
-    wxFileDialog dlg(this, _T("Choose a sound file"),
-                     wxEmptyString, wxEmptyString,
-                     _T("XML files (*.xml)|*.xml"), wxFD_OPEN|wxFD_CHANGE_DIR);
-    if ( dlg.ShowModal() == wxID_OK )
-    {
-      const char* filepath = dlg.GetPath().mb_str(wxConvUTF8);
-      printf("yay! %s\n", filepath);
-    }
-    
-    
     wxMessageBox(wxString::Format(
                     _T("Welcome to %s!\n")
                     _T("\n")
@@ -338,7 +328,7 @@ void MyFrame::OnRedo(wxCommandEvent& WXUNUSED(event)) {
 
 void MyFrame::setInstrument(Instrument* inst) {
   m_inst = inst;
-  
+  printf("MyFrame::setInstrument\n");
   oscillatorPanel->setInstrument(m_inst);
   
   for (int i = 0; i < NUM_TIMELINES; i++) {

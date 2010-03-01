@@ -290,14 +290,11 @@ int audioCallback( const void *inputBuffer, void *outputBuffer,
     */
     
     for (int i = 0; i < framesPerBuffer * 2; i++) {
-      // tube distortion:
-      //out2[i] = tanh(out2[i]);
-      
       
       // envelope limiter adapted from:
       // http://www.musicdsp.org/showone.php?id=265
       
-      /// TODO: prevent clipping entirely
+      /// old envelope limiter
       /*
       static float attackMs = 5;
       static float releaseMs = 2000;
@@ -316,6 +313,7 @@ int audioCallback( const void *inputBuffer, void *outputBuffer,
       else if (*out2 < -0.99999f) *out2 = -0.99999f;
       */
       
+      // new envelope limiter
       static float releaseMs = 40000;
       static float sampleRate = 44100 * 2; // 2 channels
       static float envelope = 0;
@@ -323,10 +321,20 @@ int audioCallback( const void *inputBuffer, void *outputBuffer,
       float v = fabs( *out2 );
       if ( v > envelope ) envelope = v;
       else                envelope = r * ( envelope - v ) + v;
-      *out2 = *out2 * (1.0f - pow(2.0f, -envelope)) / envelope;
+      if (envelope > 0.0f) {
+        *out2 = *out2 * (1.0f - pow(2.0f, -envelope)) / envelope;
+      }
+      
+      // Clip distortion:
+      /*
+      if (*out2 > 0.5f) *out2 = 0.5f;
+      else if (*out2 < -0.5f) *out2 = -0.5f;
+      */
+      
+      // tube distortion:
+      //out2[i] = tanh(out2[i]);
       
       out2++;
-      
     }
     
     while (localDeathRow.size() > 0) {

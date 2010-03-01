@@ -23,15 +23,30 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef EFFECT_H
-#define EFFECT_H
+#include <memory.h>
+#include "Monitor.h"
+#include "ChangeEffectDepth.h"
 
-class Instrument;
-struct Effect {
-public:
-  Instrument* inst;
-  char type;
-  char timeline;
-};
 
-#endif // EFFECT_H
+ChangeEffectDepth::ChangeEffectDepth(Instrument* inst, char timeline, char type, unsigned char value)
+  : Change(false)
+{
+  this->inst = inst;
+  this->timeline = timeline;
+  this->type = type;
+  before = inst->mod.depths[timeline][type];
+  after = value;
+  didAnything = (before != after);
+  
+  doForwards();
+}
+
+ChangeEffectDepth::~ChangeEffectDepth() {}
+
+void ChangeEffectDepth::doForwards() {
+  inst->setDepth(type, timeline, after);
+}
+
+void ChangeEffectDepth::doBackwards() {
+  inst->setDepth(type, timeline, before);
+}

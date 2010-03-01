@@ -37,6 +37,8 @@ ChangeOscillatorSlider::ChangeOscillatorSlider(Instrument* inst, unsigned char* 
   doForwards();
 }
 
+ChangeOscillatorSlider::~ChangeOscillatorSlider() {}
+
 void ChangeOscillatorSlider::update(unsigned char newValue) {
   after = newValue;
   doForwards();

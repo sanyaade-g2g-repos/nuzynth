@@ -36,7 +36,10 @@ History::~History() {
 }
 
 void History::record(Change* change) {
-  if (change->didNothing()) return;
+  if (change->didNothing()) {
+    delete change;
+    return;
+  }
   if (index < changes.size()) {
     for (int i = index; i < changes.size(); i++) {
       delete changes[i];

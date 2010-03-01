@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _TONE_H_
-#define _TONE_H_
+#ifndef TONE_H
+#define TONE_H
 
 #include "Modulator.h"
 
@@ -55,4 +55,4 @@ void Tone_create(Tone* tone, unsigned int id, ModulatorSharer* sharer, float her
 }
 #endif
 
-#endif // _TONE_H_
+#endif // TONE_H
