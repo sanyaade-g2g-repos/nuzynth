@@ -71,51 +71,37 @@ protected:
   }
   
   // Don't override this function!
-  // Returns true if there's no more than one clone left.
-  virtual bool tryHarvestingExtraClones() {
-    printf("SharedManager::tryHarvestingExtraClones()\n");
+  // Assumes the first clone is already received and proceeds to 
+  // harvest all of the remaining clones. 
+  virtual void harvestExtraClones() {
+    printf("SharedManager::harvestExtraClones()\n");
     SinglyLinkedList *node1, *node2;
     node1 = oldClones;
     
     Clone *clone1, *clone2;
-    while (node1 != 0) {
-      clone1 = (Clone*) node1->val;
-      if (clone1->used) {
-        // all Clones following this one are unused. 
-        
-        // first pass: free any unused buffers after node1.
-        node2 = node1->next;
-        while (node2 != 0) {
-          clone2 = (Clone*) node2->val;
-          
-          destroyOldClone(clone1, clone2);
-          
-          // This would also be a good place to free any unused loop functions, except I'm 
-          // planning on saving those in a map indefinitely...
-          clone1 = clone2;
-          node2 = node2->next;
-        }
-        
-        // second pass: truncate the linked list after node1.
-        node2 = node1->next;
-        node1->next = 0;
-        while (node2 != 0) {
-          node1 = node2;
-          node2 = node2->next;
-          Pool_return(sharedPool(), node1->val);
-          free(node1);
-        }
-        
-        break;
-      }
-      node1 = node1->next;
+    clone1 = (Clone*) node1->val;
+    
+    // first pass: free any unused buffers after node1.
+    node2 = node1->next;
+    while (node2 != 0) {
+      clone2 = (Clone*) node2->val;
+      
+      destroyOldClone(clone1, clone2);
+      
+      // This would also be a good place to free any unused loop functions, except I'm 
+      // planning on saving those in a map indefinitely...
+      clone1 = clone2;
+      node2 = node2->next;
     }
-    if (oldClones == 0 ||
-        oldClones->next == 0)
-    {
-      return true; // No more than one clone!
-    } else {
-      return false; // There's still extra clones!
+    
+    // second pass: truncate the linked list after node1.
+    node2 = node1->next;
+    node1->next = 0;
+    while (node2 != 0) {
+      node1 = node2;
+      node2 = node2->next;
+      Pool_return(sharedPool(), node1->val);
+      free(node1);
     }
   }
   

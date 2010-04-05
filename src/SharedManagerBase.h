@@ -49,6 +49,10 @@ public:
   static void updateClones();
   
   // To be called to indicate that no threads are using any of the 
+  // outdated clones anymore. 
+  static void updateReceivedCloneCount();
+  
+  // To be called to indicate that no threads are using any of the 
   // condemned managers anymore. 
   static void abandonCondemnedManagers();
   
@@ -57,10 +61,11 @@ public:
   
 protected:
   virtual void updateClone() = 0;
-  virtual bool tryHarvestingExtraClones() = 0;
+  virtual void harvestExtraClones() = 0;
   
 private:
   bool dirty;
+  unsigned int clonedIndex;
   unsigned int condemnedIndex;
   
   bool isAbandoned();
@@ -68,6 +73,8 @@ private:
   static std::vector<SharedManagerBase*> managersWithOutdatedClones;
   static std::vector<SharedManagerBase*> managersWithExtraClones;
   static std::vector<SharedManagerBase*> condemnedManagers;
+  static Sharer<unsigned int, true> cloneCount;
+  static Sharer<unsigned int, false> receivedCloneCount;
   static Sharer<unsigned int, true> condemnedCount;
   static Sharer<unsigned int, false> abandonedCount;
 };

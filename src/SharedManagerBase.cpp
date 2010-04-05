@@ -29,10 +29,12 @@
 std::vector<SharedManagerBase*> SharedManagerBase::managersWithOutdatedClones;
 std::vector<SharedManagerBase*> SharedManagerBase::managersWithExtraClones;
 std::vector<SharedManagerBase*> SharedManagerBase::condemnedManagers;
+Sharer<unsigned int, true> SharedManagerBase::cloneCount;
+Sharer<unsigned int, false> SharedManagerBase::receivedCloneCount;
 Sharer<unsigned int, true> SharedManagerBase::condemnedCount;
 Sharer<unsigned int, false> SharedManagerBase::abandonedCount;
 
-SharedManagerBase::SharedManagerBase() : dirty(false), condemnedIndex(0) {
+SharedManagerBase::SharedManagerBase() : dirty(false), clonedIndex(0), condemnedIndex(0) {
   markSharedDataDirty();
 }
 
@@ -63,22 +65,34 @@ void SharedManagerBase::updateClones() {
     printf("updating outdated clones\n");
     SharedManagerBase* manager = SharedManagerBase::managersWithOutdatedClones.back();
     SharedManagerBase::managersWithOutdatedClones.pop_back();
-    SharedManagerBase::managersWithExtraClones.push_back(manager);
     manager->updateClone();
     manager->dirty = false;
+    
+    unsigned int temp = SharedManagerBase::cloneCount.read() + 1;
+    SharedManagerBase::cloneCount.write(temp);
+    manager->clonedIndex = temp;
+    
+    SharedManagerBase::managersWithExtraClones.push_back(manager);
   }
+  
+  unsigned int receivedCloneCount = SharedManagerBase::receivedCloneCount.read();
   
   while (SharedManagerBase::managersWithExtraClones.size() > 0) {
     printf("inspecting item with extra clones\n");
     SharedManagerBase* manager = SharedManagerBase::managersWithExtraClones.back();
-    if (manager->tryHarvestingExtraClones()) {
-      printf("all extra clones harvested\n");
+    if (receivedCloneCount >= manager->clonedIndex) {
+      printf("harvesting extra clones\n");
+      manager->harvestExtraClones();
       SharedManagerBase::managersWithExtraClones.pop_back();
     } else {
-      break;
+      break; /// TODO: skip and try the next one.
     }
   }
   SharedManagerBase::abandonedCount.write(SharedManagerBase::condemnedCount.read());
+}
+
+void SharedManagerBase::updateReceivedCloneCount() {
+  SharedManagerBase::receivedCloneCount.write(SharedManagerBase::cloneCount.read());
 }
 
 void SharedManagerBase::abandonCondemnedManagers() {

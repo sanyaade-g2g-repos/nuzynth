@@ -262,14 +262,13 @@ int audioCallback( const void *inputBuffer, void *outputBuffer,
       
       // synthesize!
       Modulator* mod = tone->instrument->getSharedDataClone();
-      mod->used = 1;
       
       if (mod != 0) {
         mod->synthFunction(tone, mod, out, framesPerBuffer);
       }
     }
     
-    /// TODO: Mark all condemned things as abandoned. 
+    SharedManagerBase::updateReceivedCloneCount();
     SharedManagerBase::abandonCondemnedManagers();
     
     float *out2 = (float*)outputBuffer;

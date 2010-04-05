@@ -111,7 +111,6 @@ typedef struct Modulator {
   SynthOptions synthOptions;
   float* wave;
   void (*synthFunction)(struct Tone*, struct Modulator*, float*, int);
-  char used; // use as boolean!
 } Modulator;
 
 #ifdef __cplusplus
