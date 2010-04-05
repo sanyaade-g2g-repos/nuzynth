@@ -104,18 +104,8 @@ typedef struct Modulator {
   unsigned char speeds[NUM_TIMELINES-1];
   LoopOptions loopOptions;
   float* wave;
-  
   void (*loopFunction)(struct Tone*, struct Modulator*, float*, int);
-  char used; // use as boolean!
 } Modulator;
-
-typedef struct ModulatorSharer {
-  Modulator* mod1;
-  Modulator* mod2;
-  int numReferences;
-  char useMod1;
-  char onDeathRow;
-} ModulatorSharer; // use as boolean!
 
 //void Modulator_create(Modulator* mod);
 

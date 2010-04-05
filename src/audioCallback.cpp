@@ -249,16 +249,12 @@ int audioCallback( const void *inputBuffer, void *outputBuffer,
     }
     releasedKeys.erase(releasedKeys.begin(), releasedKeys.end());
     
-    //std::vector<Sharer<Modulator>*> localDeathRow;
-    
     for (int i = 0; i < MAX_MIDI_TONES; i++) {
       Tone* tone = &tones[i];
       if (tone->alive == 0) continue;
       
       if (tone->instrument->isCondemned()) {
-        //localDeathRow.push_back(tone->instrument);
         tone->alive = 0;
-        //tone->instrument->abandon();
         continue;
       }
       
@@ -271,11 +267,6 @@ int audioCallback( const void *inputBuffer, void *outputBuffer,
       if (mod != 0) {
         mod->loopFunction(tone, mod, out, framesPerBuffer);
       }
-      
-      /*
-      if (tone->alive == 0) {
-        tone->instrument->numReferences--;
-      }*/
     }
     
     /// TODO: Mark all condemned things as abandoned. 

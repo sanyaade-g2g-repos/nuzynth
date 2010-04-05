@@ -80,8 +80,6 @@ public:
   virtual void destroyOldClone(Modulator* newClone, Modulator* oldClone);
   
 private:
-  SinglyLinkedList* oldModulators;
-  bool dirty;
   
   void setDefaultValues();
   void readCommaSeparatedChars(unsigned char* dest, int maxCount, const char* ascii);
