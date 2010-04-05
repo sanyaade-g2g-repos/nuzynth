@@ -41,15 +41,15 @@
 #include <llvm/Target/TargetSelect.h>
 #include <llvm/LinkAllPasses.h>
 
-#include "LoopJIT.h"
-#include "loop-data.h"
+#include "SynthJIT.h"
+#include "synth-data.h"
 
 using namespace llvm;
 
 static ExecutionEngine *EE = 0;
 static MemoryBuffer *Buffer = 0;
 
-void* RunLoopJIT(LoopOptions loopOptions) {
+void* RunSynthJIT(SynthOptions synthOptions) {
   // TODO: Decide which stuff only needs to be constructed once and make those static.
   // TODO: Make sure we're not leaking any LLVM stuff. 
   // TODO: Figure out where each of the three buffers is used at all, and if not, stop
@@ -58,7 +58,7 @@ void* RunLoopJIT(LoopOptions loopOptions) {
   std::string ErrorMsg;
   if (Buffer == 0) {
     InitializeNativeTarget();
-    Buffer = MemoryBuffer::getMemBuffer(loop_bitcode, loop_bitcode + sizeof(loop_bitcode) - 1);
+    Buffer = MemoryBuffer::getMemBuffer(synth_bitcode, synth_bitcode + sizeof(synth_bitcode) - 1);
   }
   LLVMContext &Context = getGlobalContext();
   
@@ -88,13 +88,13 @@ void* RunLoopJIT(LoopOptions loopOptions) {
   
   
   
-  Function* oldLoop = Mod->getFunction("loop");
+  Function* oldSynth = Mod->getFunction("synth");
   
   
-  Function::arg_iterator oldArgs = oldLoop->arg_begin();
+  Function::arg_iterator oldArgs = oldSynth->arg_begin();
   oldArgs++; // do not mirror the first argument.
   std::vector<const Type*> newArgTypes;
-  for (; oldArgs != oldLoop->arg_end(); oldArgs++) {
+  for (; oldArgs != oldSynth->arg_end(); oldArgs++) {
     newArgTypes.push_back((*oldArgs).getType());
   }
   
@@ -102,9 +102,9 @@ void* RunLoopJIT(LoopOptions loopOptions) {
                                                 newArgTypes,
                                                 false); // has variable number of arguments? No.
   
-  c = Mod->getOrInsertFunction("optimizedLoop", newFuncType);
-  Function* optimizedLoop = cast<Function>(c);
-  BasicBlock* block = BasicBlock::Create(Context, "entry", optimizedLoop);
+  c = Mod->getOrInsertFunction("optimizedSynth", newFuncType);
+  Function* optimizedSynth = cast<Function>(c);
+  BasicBlock* block = BasicBlock::Create(Context, "entry", optimizedSynth);
   IRBuilder<> irbuilder(block);
   
   
@@ -113,7 +113,7 @@ void* RunLoopJIT(LoopOptions loopOptions) {
   SmallVector<Value*, 10> passedParams;
   char options[NUM_EFFECT_TYPES + 1];
   for (int i = 0; i < NUM_EFFECT_TYPES; i++) {
-    options[i] = loopOptions.options[i];
+    options[i] = synthOptions.options[i];
   }
   options[NUM_EFFECT_TYPES] = 0;
   
@@ -135,11 +135,11 @@ void* RunLoopJIT(LoopOptions loopOptions) {
   
   
   passedParams.push_back(myStringPtr);
-  Function::arg_iterator newArgs = optimizedLoop->arg_begin();
-  for (; newArgs != optimizedLoop->arg_end(); newArgs++) {
+  Function::arg_iterator newArgs = optimizedSynth->arg_begin();
+  for (; newArgs != optimizedSynth->arg_end(); newArgs++) {
     passedParams.push_back(&(*newArgs));
   }
-  irbuilder.CreateCall(oldLoop, passedParams.begin(), passedParams.end(), "");
+  irbuilder.CreateCall(oldSynth, passedParams.begin(), passedParams.end(), "");
   
   irbuilder.CreateRetVoid();
   
@@ -148,12 +148,12 @@ void* RunLoopJIT(LoopOptions loopOptions) {
   // First do a simple inline, and then remove the original function before 
   // bothering with the rest of the optimizations. 
   
-  oldLoop->addFnAttr(Attribute::AlwaysInline);
+  oldSynth->addFnAttr(Attribute::AlwaysInline);
   PassManager inliner;
   inliner.add(createAlwaysInlinerPass());
   inliner.run(*Mod);
-  oldLoop->dropAllReferences();
-  Mod->getFunctionList().remove(oldLoop);
+  oldSynth->dropAllReferences();
+  Mod->getFunctionList().remove(oldSynth);
   
   
   // Optimize some more stuff for kicks:
@@ -178,19 +178,19 @@ void* RunLoopJIT(LoopOptions loopOptions) {
   createStandardFunctionPasses(&FPM, 4);
   
   PM.run(*Mod);
-  FPM.run(*optimizedLoop);
+  FPM.run(*optimizedSynth);
   
   //Mod->dump();
-  printf("Ran LoopJIT\n");
+  printf("Ran SynthJIT\n");
   
   // Build and run:
   
   EE->runStaticConstructorsDestructors(Mod, false); // constructors
-  //void *FPtr = EE->getPointerToFunction(oldLoop);
+  //void *FPtr = EE->getPointerToFunction(oldSynth);
   //void (*FP)() = (void (*)())FPtr;
   //FP();
   //EE->runStaticConstructorsDestructors(Mod, true); // destructors
   
   // Just build:
-  return EE->getPointerToFunction(optimizedLoop);
+  return EE->getPointerToFunction(optimizedSynth);
 }

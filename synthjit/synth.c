@@ -120,7 +120,7 @@ extern "C" {
 
 
 
-void loop(char* options, Tone* tone, Modulator* mod, float* out, int frames) {
+void synth(char* options, Tone* tone, Modulator* mod, float* out, int frames) {
   int i;
   
   char hasAttackEffect = 0;

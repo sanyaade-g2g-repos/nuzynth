@@ -38,7 +38,7 @@ endif
 
 all: $(BINDIR) $(TARGET)
 
-$(TARGET): $(OBJFILES) loopjit/LoopJIT.o
+$(TARGET): $(OBJFILES) synthjit/SynthJIT.o
 ifeq ($(UNAME),Darwin)
 	rm -rf $(BUNDLE)
 	mkdir $(BUNDLE)
@@ -55,18 +55,18 @@ $(BINDIR):
 $(BINDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CC) -c -o $(BINDIR)/$*.o $(SRCDIR)/$*.cpp $(CXXFLAGS)
 
-loopjit/LoopJIT.o: loopjit/LoopJIT.cpp loopjit/loop.c
-	llvm-g++ -O3 -emit-llvm loopjit/loop.c -c -o loopjit/loop.bc $(ARCH)
-	(echo "const char loop_bitcode[] = {"; od -txC   loopjit/loop.bc   | sed -e "s/^[0-9]*//" -e s"/ \([0-9a-f][0-9a-f]\)/0x\1,/g" -e"\$$d" | sed -e"\$$s/,$$/, 0x00};/") >loopjit/loop-data.h
-	$(CC) -c -o loopjit/LoopJIT.o loopjit/LoopJIT.cpp $(CXXFLAGS) `llvm-config --cxxflags`
+synthjit/SynthJIT.o: synthjit/SynthJIT.cpp synthjit/synth.c
+	llvm-g++ -O3 -emit-llvm synthjit/synth.c -c -o synthjit/synth.bc $(ARCH)
+	(echo "const char synth_bitcode[] = {"; od -txC   synthjit/synth.bc   | sed -e "s/^[0-9]*//" -e s"/ \([0-9a-f][0-9a-f]\)/0x\1,/g" -e"\$$d" | sed -e"\$$s/,$$/, 0x00};/") >synthjit/synth-data.h
+	$(CC) -c -o synthjit/SynthJIT.o synthjit/SynthJIT.cpp $(CXXFLAGS) `llvm-config --cxxflags`
 
 
 clean: 
 	rm -rf $(BINDIR)
 	rm -f $(TARGET)
 	rm -rf $(BUNDLE)
-	rm -f loopjit/LoopJIT.o
-	rm -f loopjit/loop-data.h
-	rm -f loopjit/loop.bc
+	rm -f synthjit/SynthJIT.o
+	rm -f synthjit/synth-data.h
+	rm -f synthjit/synth.bc
 
 .PHONY: clean all

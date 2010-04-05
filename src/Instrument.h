@@ -48,7 +48,7 @@ extern const unsigned char bufferFlags[NUM_TIMELINES];
 
 class Instrument : public SharedManager<Modulator> {
 public:
-  static std::map<LoopOptions, void*> loopFunctions;
+  static std::map<SynthOptions, void*> synthFunctions;
   Oscillator oscillator;
   std::vector<Effect*> timelines[NUM_TIMELINES];
   int timelineEffectCount[NUM_TIMELINES];

@@ -35,9 +35,9 @@
 #include "Instrument.h"
 #include "Monitor.h"
 #include "memoryBarrier.h"
-#include "../loopjit/LoopJIT.h"
+#include "../synthjit/SynthJIT.h"
 
-std::map<LoopOptions, void*> Instrument::loopFunctions;
+std::map<SynthOptions, void*> Instrument::synthFunctions;
 
 
 const char* effectNames[] = {
@@ -227,7 +227,7 @@ Instrument::Instrument(Song* song, FILE* file) {
       timelines[timelineNum].push_back(effect);
       Monitor::setProperty(&timelineEffectCount[timelineNum], timelineEffectCount[timelineNum] + 1);
       
-      sharedData->loopOptions.options[effectNum] |= bufferFlags[timelineNum];
+      sharedData->synthOptions.options[effectNum] |= bufferFlags[timelineNum];
     }
   }
   
@@ -373,14 +373,14 @@ void Instrument::cleanSharedData() {
     updateWave();
   }
   
-  void* loopPointer;
-  if (loopFunctions.find(sharedData->loopOptions) != loopFunctions.end()) {
-    loopPointer = loopFunctions[sharedData->loopOptions];
+  void* synthPointer;
+  if (synthFunctions.find(sharedData->synthOptions) != synthFunctions.end()) {
+    synthPointer = synthFunctions[sharedData->synthOptions];
   } else {
-    loopPointer = RunLoopJIT(sharedData->loopOptions);
-    loopFunctions[sharedData->loopOptions] = loopPointer;
+    synthPointer = RunSynthJIT(sharedData->synthOptions);
+    synthFunctions[sharedData->synthOptions] = synthPointer;
   }
-  sharedData->loopFunction = (void (*)(struct Tone*, struct Modulator*, float*, int)) loopPointer;
+  sharedData->synthFunction = (void (*)(struct Tone*, struct Modulator*, float*, int)) synthPointer;
 }
 
 void Instrument::destroyOldClone(Modulator* newClone, Modulator* oldClone) {
@@ -466,12 +466,12 @@ void Instrument::setSpeed(int timeline, unsigned char val) {
 
 void Instrument::setEffectEnabled(int type, int timeline, bool enable) {
   unsigned char flag = bufferFlags[timeline];
-  bool wasEnabled = GET_OPTION(sharedData->loopOptions.options[type], flag);
+  bool wasEnabled = GET_OPTION(sharedData->synthOptions.options[type], flag);
   if (enable == wasEnabled) return;
   
   markSharedDataDirty();
-  Monitor::setProperty(&sharedData->loopOptions.options[type], 
-             SET_OPTION(sharedData->loopOptions.options[type], flag, enable));
+  Monitor::setProperty(&sharedData->synthOptions.options[type], 
+             SET_OPTION(sharedData->synthOptions.options[type], flag, enable));
   
   if (timeline == CONSTANT_TIMELINE) return; // don't create a buffer for constant effect.
   
@@ -511,7 +511,7 @@ void Instrument::setEffectEnabled(int type, int timeline, bool enable) {
 
 int Instrument::findUnusedEffectType(int timeline) {
   for (int i = 0; i < NUM_EFFECT_TYPES; i++) {
-    if ((sharedData->loopOptions.options[i] & bufferFlags[timeline]) == 0) {
+    if ((sharedData->synthOptions.options[i] & bufferFlags[timeline]) == 0) {
       return i;
     }
   }

@@ -23,11 +23,11 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __LOOP_JIT_H__ 
-#define __LOOP_JIT_H__ 
+#ifndef SYNTH_JIT_H
+#define SYNTH_JIT_H
 
 #include "../src/Modulator.h"
 
-void* RunLoopJIT(LoopOptions loopOptions);
+void* RunSynthJIT(SynthOptions synthOptions);
 
-#endif // __LOOP_JIT_H__ 
+#endif // SYNTH_JIT_H

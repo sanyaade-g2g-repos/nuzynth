@@ -84,11 +84,17 @@ NUM_TIMELINES
 
 struct Tone;
 
-typedef struct LoopOptions {
+// For each effect type, for each timeline that could potentially use the 
+// effect type, is this combination enabled?
+typedef struct SynthOptions {
   unsigned char options[NUM_EFFECT_TYPES];
-} LoopOptions;
+} SynthOptions;
 
-static inline bool operator < (const LoopOptions& left, const LoopOptions& right) {
+
+// SynthOptions are used as a key to access synth functions. The functions
+// are stored in a map which uses "<" as a comparison on the keys. (I think
+// it's a binary tree?) So let's define the "<" comparison for SynthOptions:
+static inline bool operator < (const SynthOptions& left, const SynthOptions& right) {
   int i;
   for (i = 0; i < NUM_EFFECT_TYPES; i++) {
     if (left.options[i] == right.options[i]) continue;
@@ -102,14 +108,11 @@ typedef struct Modulator {
   unsigned char* buffers[NUM_TIMELINES-1][NUM_EFFECT_TYPES];
   unsigned char depths[NUM_TIMELINES][NUM_EFFECT_TYPES];
   unsigned char speeds[NUM_TIMELINES-1];
-  LoopOptions loopOptions;
+  SynthOptions synthOptions;
   float* wave;
-  void (*loopFunction)(struct Tone*, struct Modulator*, float*, int);
+  void (*synthFunction)(struct Tone*, struct Modulator*, float*, int);
+  char used; // use as boolean!
 } Modulator;
-
-//void Modulator_create(Modulator* mod);
-
-//void Modulator_update(Modulator* mod);
 
 #ifdef __cplusplus
 }

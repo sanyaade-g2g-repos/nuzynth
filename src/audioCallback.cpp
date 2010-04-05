@@ -260,12 +260,12 @@ int audioCallback( const void *inputBuffer, void *outputBuffer,
       
       float *out = (float*)outputBuffer;
       
-      // loop!
+      // synthesize!
       Modulator* mod = tone->instrument->getSharedDataClone();
       mod->used = 1;
       
       if (mod != 0) {
-        mod->loopFunction(tone, mod, out, framesPerBuffer);
+        mod->synthFunction(tone, mod, out, framesPerBuffer);
       }
     }
     
