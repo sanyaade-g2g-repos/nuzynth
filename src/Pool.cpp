@@ -29,6 +29,8 @@
 #include "Pool.h"
 
 void private_allocate(Pool* pool) {
+  printf("Allocating new buffers of size %d\n", pool->size);
+  
   char* p = (char*)malloc(pool->size * pool->increment + (pool->align32 ? 0x20 : 0));
   // TODO: Figure out alignment:
   //if (pool->align32) p = (p & ~0x1f) + 0x20;

@@ -28,13 +28,13 @@
 
 #include <stdio.h>
 #include <vector>
-#include "History.h"
+#include "History.h";
 
-class Instrument;
+class Clip;
 
 class Song {
 public:
-  std::vector<Instrument*> instruments;
+  std::vector<Clip*> clips;
   History history;
   
   //Song();

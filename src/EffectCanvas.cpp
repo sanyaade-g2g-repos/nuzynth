@@ -104,7 +104,7 @@ void EffectCanvas::OnPaint( wxPaintEvent& WXUNUSED(event) ) {
   
   dc.SetPen(wxPen(wxColour(0x00,0x00,0x00), 2, wxSOLID));
   
-  unsigned char* buffer = effect->inst->mod.buffers[effect->timeline][effect->type];
+  unsigned char* buffer = effect->inst->sharedData->buffers[effect->timeline][effect->type];
   float x1, x2, y1, y2;
   float dx = (float) vW / (float) EFFECT_LENGTH;
   x2 = (float) dx / 2.0f;
@@ -252,7 +252,7 @@ void EffectCanvas::onEffectTypeChanged(char* unused) {
   effectType = effect->type;
   
   if (effectType != -1) {
-    Monitor::addCallback( &effect->inst->mod.buffers[effect->timeline][effectType], 
+    Monitor::addCallback( &effect->inst->sharedData->buffers[effect->timeline][effectType], 
                           new Callback<unsigned char*, EffectCanvas>
                             (this, &EffectCanvas::onBufferChanged) );
   }
@@ -261,7 +261,7 @@ void EffectCanvas::onEffectTypeChanged(char* unused) {
 
 void EffectCanvas::detachEffectBufferCallback() {
   if (effectType != -1) {
-    Monitor::removeCallback( (void*)(&effect->inst->mod.buffers[effect->timeline][effectType]), 
+    Monitor::removeCallback( (void*)(&effect->inst->sharedData->buffers[effect->timeline][effectType]), 
                              this );
   }
   effectType = -1;

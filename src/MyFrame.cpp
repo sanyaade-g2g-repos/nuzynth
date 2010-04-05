@@ -33,6 +33,8 @@
 #include "midi.h"
 #include "Tone.h"
 #include "WheelCatcher.h"
+#include "Clip.h"
+#include "Track.h"
 
 
 
@@ -209,10 +211,10 @@ void MyFrame::OnOpen(wxCommandEvent& WXUNUSED(event)) {
       FILE* file = fopen(filepath, "r");
       Instrument* inst = new Instrument(_song, file);
       fclose(file);
-      Instrument* temp = _song->instruments[0];
+      Instrument* temp = _song->clips[0]->tracks[0]->instrument;
       
       /// TODO: Make sure the following line is thread safe:
-      _song->instruments[0] = inst;
+      _song->clips[0]->tracks[0]->instrument = inst;
       
       setInstrument(inst);
       temp->prepareToDie();

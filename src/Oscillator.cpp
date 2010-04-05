@@ -61,6 +61,7 @@ void Oscillator_renderWave(Oscillator* oscillator, float* wave) {
   
   if (planInitialized == false) {
     plan = fftwf_plan_dft_c2r_1d(SAMPLES_IN_WAVE, scratch, wave, FFTW_MEASURE);
+    planInitialized = true;
   }
   
   scratch[                   0][0] = 0;

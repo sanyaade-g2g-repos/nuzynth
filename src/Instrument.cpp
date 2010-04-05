@@ -37,8 +37,6 @@
 #include "memoryBarrier.h"
 #include "../loopjit/LoopJIT.h"
 
-std::vector<Instrument*> Instrument::dirtyInstruments;
-std::vector<Instrument*> Instrument::deathRow;
 std::map<LoopOptions, void*> Instrument::loopFunctions;
 
 
@@ -123,7 +121,7 @@ Instrument::Instrument(Song* song) {
   this->song = song;
   setDefaultValues();
   updateWave();
-  clean();
+  updateClone();
 }
 
 Instrument::Instrument(Song* song, FILE* file) {
@@ -193,7 +191,7 @@ Instrument::Instrument(Song* song, FILE* file) {
     if (!isConstant) {
       int speed;
       timelineXML->QueryIntAttribute("speed", &speed);
-      mod.speeds[timelineNum] = speed;
+      sharedData->speeds[timelineNum] = speed;
     }
     
     TiXmlElement* effectXML = timelineXML->FirstChildElement("effect");
@@ -212,13 +210,13 @@ Instrument::Instrument(Song* song, FILE* file) {
       {
         int depth;
         effectXML->QueryIntAttribute("depth", &depth);
-        mod.depths[timelineNum][effectNum] = depth;
+        sharedData->depths[timelineNum][effectNum] = depth;
       }
       
       if (!isConstant) {
         const char* curveString = effectXML->Attribute("curve");
         unsigned char* buffer = (unsigned char*)Pool_draw(effectPool());
-        mod.buffers[timelineNum][effectNum] = buffer;
+        sharedData->buffers[timelineNum][effectNum] = buffer;
         readCommaSeparatedChars(buffer, EFFECT_LENGTH, curveString);
       }
       
@@ -229,13 +227,13 @@ Instrument::Instrument(Song* song, FILE* file) {
       timelines[timelineNum].push_back(effect);
       Monitor::setProperty(&timelineEffectCount[timelineNum], timelineEffectCount[timelineNum] + 1);
       
-      mod.loopOptions.options[effectNum] |= bufferFlags[timelineNum];
+      sharedData->loopOptions.options[effectNum] |= bufferFlags[timelineNum];
     }
   }
   
   NoiseSpectrum_updateAll(&oscillator.noise);
   updateWave();
-  clean();
+  updateClone();
 }
 
 void Instrument::readCommaSeparatedChars(unsigned char* dest, int maxCount, const char* ascii) {
@@ -261,21 +259,16 @@ void Instrument::readCommaSeparatedChars(unsigned char* dest, int maxCount, cons
 Instrument::~Instrument() {}
 
 void Instrument::setDefaultValues() {
-  memset(&mod, 0, sizeof(Modulator));
-  memset(&sharer, 0, sizeof(ModulatorSharer));
-  mod.speeds[0] = 80;
-  mod.speeds[1] = 30;
-  mod.speeds[2] = 100;
-  mod.speeds[3] = 60;
-  mod.wave = 0;
+  sharedData = (Modulator*) Pool_draw(sharedPool());
+  memset(sharedData, 0, sizeof(Modulator));
+  
+  sharedData->speeds[0] = 80;
+  sharedData->speeds[1] = 30;
+  sharedData->speeds[2] = 100;
+  sharedData->speeds[3] = 60;
+  sharedData->wave = 0;
   
   Oscillator_init(&oscillator);
-  
-  oldModulators = 0;
-  sharer.onDeathRow = 0;
-  sharer.numReferences = 0;
-  
-  dirty = true;
 }
 
 void Instrument::save(FILE* file) {
@@ -325,7 +318,7 @@ void Instrument::save(FILE* file) {
   for (int timeline = 0; timeline < NUM_TIMELINES; timeline++) {
     TiXmlElement timelineXML("timeline");
     timelineXML.SetAttribute("type", timelineNames[timeline]);
-    if (timeline != CONSTANT_TIMELINE) timelineXML.SetAttribute("speed", mod.speeds[timeline]);
+    if (timeline != CONSTANT_TIMELINE) timelineXML.SetAttribute("speed", sharedData->speeds[timeline]);
     std::vector<Effect*>::iterator iter = timelines[timeline].begin();
     for (; iter != timelines[timeline].end(); iter++) {
       Effect* effect = *iter;
@@ -333,10 +326,10 @@ void Instrument::save(FILE* file) {
       effectXML.SetAttribute("type", effectNames[effect->type]);
       
       if (timeline == (int) CONSTANT_TIMELINE || effectScaleType[effect->type])
-        effectXML.SetAttribute("depth", mod.depths[effect->timeline][effect->type]);
+        effectXML.SetAttribute("depth", sharedData->depths[effect->timeline][effect->type]);
       
       if (timeline != (int) CONSTANT_TIMELINE) {
-        unsigned char* buffer = mod.buffers[effect->timeline][effect->type];
+        unsigned char* buffer = sharedData->buffers[effect->timeline][effect->type];
         std::string bufferString;
         char shortString[10];
         for (int k = 0; k < EFFECT_LENGTH; k++) {
@@ -363,131 +356,63 @@ void Instrument::save(FILE* file) {
 }
 
 void Instrument::prepareToDie() {
-  markDirty();
-  mod.wave = 0; /// this is not a memory leak because it will be compared against the previous modulator's wave.
+  markSharedDataDirty();
+  sharedData->wave = 0; /// this is not a memory leak because it will be compared against the previous modulator's wave.
   for (int timeline = 0; timeline < NUM_TIMELINES; timeline++) {
     while (timelines[timeline].size() > 0) {
       destroyEffect(timelines[timeline].back());
     }
   }
   
-  deathRow.push_back(this);
-  PaUtil_WriteMemoryBarrier();
-  sharer.onDeathRow = 1;
+  condemn();
 }
 
-void Instrument::cleanAllDirt() {
-  while (dirtyInstruments.size() > 0) {
-    //printf("cleaning up instrument\n");
-    Instrument* inst = dirtyInstruments.back();
-    dirtyInstruments.pop_back();
-    inst->clean();
-  }
-  while (deathRow.size() > 0) {
-    printf("killing death row member\n");
-    Instrument* inst = deathRow.back();
-    // TODO: Make sure this is thread safe:
-    if (inst->sharer.numReferences == 0) {
-      deathRow.pop_back();
-      delete inst;
-    } else {
-      break; // TODO: skip and try the next one.
-    }
-  }
-}
-
-void Instrument::clean() {
+void Instrument::cleanSharedData() {
+  printf("Instrument::cleanSharedData()\n");
   if (oscillator.dirty) {
     updateWave();
   }
   
   void* loopPointer;
-  if (loopFunctions.find(mod.loopOptions) != loopFunctions.end()) {
-    loopPointer = loopFunctions[mod.loopOptions];
+  if (loopFunctions.find(sharedData->loopOptions) != loopFunctions.end()) {
+    loopPointer = loopFunctions[sharedData->loopOptions];
   } else {
-    loopPointer = RunLoopJIT(mod.loopOptions);
-    loopFunctions[mod.loopOptions] = loopPointer;
+    loopPointer = RunLoopJIT(sharedData->loopOptions);
+    loopFunctions[sharedData->loopOptions] = loopPointer;
   }
-  mod.loopFunction = (void (*)(struct Tone*, struct Modulator*, float*, int)) loopPointer;
-  
-  Modulator* copy = (Modulator*) Pool_draw(modulatorPool());
-  memcpy(copy, &mod, sizeof(Modulator));
-  
-  if (sharer.useMod1) {
-    sharer.mod2 = copy;
-    PaUtil_WriteMemoryBarrier();
-    sharer.useMod1 = 0;
-  } else {
-    sharer.mod1 = copy;
-    PaUtil_WriteMemoryBarrier();
-    sharer.useMod1 = 1;
-  }
-  
-  SinglyLinkedList *l1, *l2;
-  l1 = (SinglyLinkedList*) malloc(sizeof(SinglyLinkedList));
-  l1->val = copy;
-  l1->next = oldModulators;
-  oldModulators = l1;
-  
-  Modulator *t1, *t2;
-  while (l1 != 0) {
-    t1 = (Modulator*) l1->val;
-    if (t1->used) {
-      // all Modulators following this one are unused. 
-      
-      // first pass: free any unused buffers after l1.
-      l2 = l1->next;
-      while (l2 != 0) {
-        t2 = (Modulator*) l2->val;
-        // any buffers used by t2 but not t1 can be returned to the pool.
-        for (int j = 0; j < NUM_TIMELINES-1; j++) {
-          for (int i = 0; i < NUM_EFFECT_TYPES; i++) {
-            if (t1->buffers[j][i] != t2->buffers[j][i] && t2->buffers[j][i] != 0) {
-              Pool_return(effectPool(), t2->buffers[j][i]);
-            }
-          }
-        }
-        if (t1->wave != t2->wave) {
-          //fftwf_free(t2->wave);
-          Pool_return(wavePool(), t2->wave);
-        }
-        // This would also be a good place to free any unused loop functions, except I'm 
-        // planning on saving those in a map indefinitely...
-        t1 = t2;
-        l2 = l2->next;
+  sharedData->loopFunction = (void (*)(struct Tone*, struct Modulator*, float*, int)) loopPointer;
+}
+
+void Instrument::destroyOldClone(Modulator* newClone, Modulator* oldClone) {
+  printf("Instrument::destroyOldClone(newClone, oldClone)\n");
+  // any buffers used by oldClone but not newClone can be returned to the pool.
+  for (int j = 0; j < NUM_TIMELINES-1; j++) {
+    for (int i = 0; i < NUM_EFFECT_TYPES; i++) {
+      if (oldClone->buffers[j][i] != newClone->buffers[j][i] &&
+          oldClone->buffers[j][i] != 0)
+      {
+        Pool_return(effectPool(), oldClone->buffers[j][i]);
       }
-      
-      // second pass: truncate the linked list after l1.
-      l2 = l1->next;
-      l1->next = 0;
-      while (l2 != 0) {
-        l1 = l2;
-        l2 = l2->next;
-        Pool_return(modulatorPool(), l1->val);
-        free(l1);
-      }
-      
-      break;
     }
-    l1 = l1->next;
   }
-  
-  dirty = false;
+  if (newClone->wave != oldClone->wave) {
+    /// TODO: Make sure this is okay. :)
+    //fftwf_free(oldClone->wave);
+    Pool_return(wavePool(), oldClone->wave);
+  }
 }
 
 void Instrument::updateWave()
 {
-  float* wave = mod.wave;
-  //if ( (!dirty) || wave == 0 ) {
-    markDirty();
-    wave = (float*) fftwf_malloc(sizeof(float) * SAMPLES_IN_WAVE);
-    wave = (float*) Pool_draw(wavePool());
-  //}
-  //memset(wave, 0, sizeof(float) * SAMPLES_IN_WAVE);
+  float* wave = sharedData->wave;
+  markSharedDataDirty();
+  //wave = (float*) fftwf_malloc(sizeof(float) * SAMPLES_IN_WAVE);
+  
+  wave = (float*) Pool_draw(wavePool());
   
   Oscillator_renderWave(&oscillator, wave);
   
-  Monitor::setProperty(&mod.wave, wave);
+  Monitor::setProperty(&sharedData->wave, wave);
 }
 
 Pool* Instrument::effectPool() {
@@ -506,66 +431,51 @@ Pool* Instrument::wavePool() {
   }
   return pool;
 }
-Pool* Instrument::modulatorPool() {
-  static Pool* pool = 0;
-  if (pool == 0) {
-    pool = (Pool*)malloc(sizeof(Pool));
-    Pool_init(pool, sizeof(Modulator), false);
-  }
-  return pool;
-}
 
 unsigned char* Instrument::copyEffectBuffer(int effect, int timeline) {
   unsigned char* buffer = (unsigned char*) Pool_draw(effectPool());
-  unsigned char* oldBuffer = mod.buffers[timeline][effect];
+  unsigned char* oldBuffer = sharedData->buffers[timeline][effect];
   memcpy(buffer, oldBuffer, EFFECT_LENGTH * sizeof(unsigned char));
   return buffer;
 }
 
 void Instrument::replaceEffectBuffer(int effect, int timeline, unsigned char* newBuffer) {
-  Monitor::setProperty(&mod.buffers[timeline][effect], newBuffer);
-  markDirty();
-}
-
-void Instrument::markDirty() {
-  if (!dirty) {
-    dirty = true;
-    dirtyInstruments.push_back(this);
-  }
+  Monitor::setProperty(&sharedData->buffers[timeline][effect], newBuffer);
+  markSharedDataDirty();
 }
 
 unsigned char Instrument::getDepth(int type, int timeline) {
-  return mod.depths[timeline][type];
+  return sharedData->depths[timeline][type];
 }
 
 void Instrument::setDepth(int type, int timeline, unsigned char val) {
-  if (mod.depths[timeline][type] == val) return;
-  Monitor::setProperty(&mod.depths[timeline][type], val);
-  markDirty();
+  if (sharedData->depths[timeline][type] == val) return;
+  Monitor::setProperty(&sharedData->depths[timeline][type], val);
+  markSharedDataDirty();
 }
 
 unsigned char Instrument::getSpeed(int timeline) {
-  return mod.speeds[timeline];
+  return sharedData->speeds[timeline];
 }
 
 void Instrument::setSpeed(int timeline, unsigned char val) {
-  if (mod.speeds[timeline] == val) return;
-  markDirty();
-  Monitor::setProperty(&mod.speeds[timeline], val);
+  if (sharedData->speeds[timeline] == val) return;
+  markSharedDataDirty();
+  Monitor::setProperty(&sharedData->speeds[timeline], val);
 }
 
 void Instrument::setEffectEnabled(int type, int timeline, bool enable) {
   unsigned char flag = bufferFlags[timeline];
-  bool wasEnabled = GET_OPTION(mod.loopOptions.options[type], flag);
+  bool wasEnabled = GET_OPTION(sharedData->loopOptions.options[type], flag);
   if (enable == wasEnabled) return;
   
-  markDirty();
-  Monitor::setProperty(&mod.loopOptions.options[type], 
-             SET_OPTION(mod.loopOptions.options[type], flag, enable));
+  markSharedDataDirty();
+  Monitor::setProperty(&sharedData->loopOptions.options[type], 
+             SET_OPTION(sharedData->loopOptions.options[type], flag, enable));
   
   if (timeline == CONSTANT_TIMELINE) return; // don't create a buffer for constant effect.
   
-  unsigned char** bufferPtr = &mod.buffers[timeline][type];
+  unsigned char** bufferPtr = &sharedData->buffers[timeline][type];
   if (enable) {
     unsigned char* newBuffer = (unsigned char*) Pool_draw(effectPool());
     
@@ -601,7 +511,7 @@ void Instrument::setEffectEnabled(int type, int timeline, bool enable) {
 
 int Instrument::findUnusedEffectType(int timeline) {
   for (int i = 0; i < NUM_EFFECT_TYPES; i++) {
-    if ((mod.loopOptions.options[i] & bufferFlags[timeline]) == 0) {
+    if ((sharedData->loopOptions.options[i] & bufferFlags[timeline]) == 0) {
       return i;
     }
   }
@@ -644,7 +554,7 @@ void Instrument::switchEffectType(char timeline, char before, char after) {
   
   Effect* effect = 0;
   Effect* other = 0;
-  unsigned char** buffers = mod.buffers[timeline];
+  unsigned char** buffers = sharedData->buffers[timeline];
   for (; iter != timelines[timeline].end(); iter++) {
     if ((*iter)->type == before) effect = *iter;
     if ((*iter)->type == after) other = *iter;
@@ -666,7 +576,7 @@ void Instrument::switchEffectType(char timeline, char before, char after) {
   }
   
   if (timeline != (int)CONSTANT_TIMELINE) {
-    memcpy(buffer, mod.buffers[timeline][before], sizeof(unsigned char) * EFFECT_LENGTH);
+    memcpy(buffer, sharedData->buffers[timeline][before], sizeof(unsigned char) * EFFECT_LENGTH);
   }
   
   setDepth(after, timeline, oldDepth);
@@ -676,6 +586,6 @@ void Instrument::switchEffectType(char timeline, char before, char after) {
   setEffectEnabled(after, timeline, true);
   
   if (timeline != (int)CONSTANT_TIMELINE) {
-    memcpy(mod.buffers[timeline][after], buffer, sizeof(unsigned char) * EFFECT_LENGTH);
+    memcpy(sharedData->buffers[timeline][after], buffer, sizeof(unsigned char) * EFFECT_LENGTH);
   }
 }

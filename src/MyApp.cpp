@@ -36,6 +36,9 @@
 #include "Modulator.h"
 #include "Instrument.h"
 #include "keyboard.h"
+#include "Clip.h"
+#include "Track.h"
+#include "SharedManagerBase.h"
 
 // Create a new application object: this macro will allow wxWidgets to create
 // the application object during program execution (it's better than using a
@@ -61,7 +64,9 @@ bool MyApp::OnInit()
     
     /// TODO: clean this up:
     _song = new Song();
-    _song->instruments.push_back(new Instrument(_song));
+    _song->clips.push_back(new Clip());
+    _song->clips[0]->tracks.push_back(new Track());
+    _song->clips[0]->tracks[0]->instrument = new Instrument(_song);
     
     keyboard_init();
     audioCallback_init();
@@ -75,7 +80,7 @@ bool MyApp::OnInit()
     // create the main application window
     frame = new MyFrame(_T("Nuzynth"));
     
-    frame->setInstrument(_song->instruments[0]);
+    frame->setInstrument(_song->clips[0]->tracks[0]->instrument);
 
     // and show it (the frames, unlike simple controls, are not shown when
     // created initially)
@@ -128,7 +133,8 @@ void printLittleEndian(int val, int size, FILE* file) {
 
 
 void MyApp::OnIdle( wxIdleEvent& event ) {
-  Instrument::cleanAllDirt();
+  SharedManagerBase::updateClones();
+  SharedManagerBase::deleteAbandonedManagers();
   
   if (stopRecording) {
     if (!recordingStopped) {

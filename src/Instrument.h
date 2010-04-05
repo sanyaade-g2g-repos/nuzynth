@@ -30,6 +30,7 @@
 #include <vector>
 #include <map>
 #include <wx/wx.h>
+#include "SharedManager.h"
 #include "Modulator.h"
 #include "Oscillator.h"
 #include "Effect.h"
@@ -45,11 +46,9 @@ extern const wxString voiceChoices[NUM_VOICES + 1];
 extern const char* timelineNames[NUM_TIMELINES];
 extern const unsigned char bufferFlags[NUM_TIMELINES];
 
-class Instrument {
+class Instrument : public SharedManager<Modulator> {
 public:
   static std::map<LoopOptions, void*> loopFunctions;
-  Modulator mod;
-  ModulatorSharer sharer;
   Oscillator oscillator;
   std::vector<Effect*> timelines[NUM_TIMELINES];
   int timelineEffectCount[NUM_TIMELINES];
@@ -75,16 +74,12 @@ public:
   
   static Pool* effectPool();
   static Pool* wavePool();
-  static Pool* modulatorPool();
   
   void prepareToDie();
-  static void cleanAllDirt();
-  void clean();
-  void markDirty();
+  virtual void cleanSharedData();
+  virtual void destroyOldClone(Modulator* newClone, Modulator* oldClone);
   
 private:
-  static std::vector<Instrument*> dirtyInstruments;
-  static std::vector<Instrument*> deathRow;
   SinglyLinkedList* oldModulators;
   bool dirty;
   

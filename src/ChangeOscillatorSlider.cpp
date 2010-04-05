@@ -50,12 +50,12 @@ void ChangeOscillatorSlider::doForwards() {
   if (*address == after) return;
   Monitor::setProperty(address, after);
   inst->oscillator.dirty = true;
-  inst->markDirty();
+  inst->markSharedDataDirty();
 }
 
 void ChangeOscillatorSlider::doBackwards() {
   if (*address == before) return;
   Monitor::setProperty(address, before);
   inst->oscillator.dirty = true;
-  inst->markDirty();
+  inst->markSharedDataDirty();
 }

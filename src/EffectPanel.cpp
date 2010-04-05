@@ -25,6 +25,7 @@
 
 #include "EffectPanel.h"
 #include "Monitor.h"
+#include "SharedManagerBase.h"
 
 BEGIN_EVENT_TABLE(EffectPanel, wxPanel)
   EVT_COMMAND_SCROLL_THUMBTRACK (DEPTH_SLIDER, EffectPanel::OnSliderUpdate)
@@ -93,14 +94,14 @@ EffectPanel::EffectPanel(wxScrolledWindow* scrollMe, Effect* effect, bool isCons
                         new Callback<char, EffectPanel>
                           (this, &EffectPanel::typeChangedCallback) );
   oldType = effect->type;
-  Monitor::addCallback( &effect->inst->mod.depths[effect->timeline][effect->type], 
+  Monitor::addCallback( &effect->inst->sharedData->depths[effect->timeline][effect->type], 
                         new Callback<unsigned char, EffectPanel>
                           (this, &EffectPanel::depthChangedCallback) );
 }
 
 EffectPanel::~EffectPanel() {
   Monitor::removeCallback( (void*)(&effect->type), this );
-  Monitor::removeCallback( (void*)(&effect->inst->mod.depths[effect->timeline][effect->type]), this );
+  Monitor::removeCallback( (void*)(&effect->inst->sharedData->depths[effect->timeline][effect->type]), this );
   if (effectCanvas != 0) effectCanvas->setEffect(0); // detach callbacks
 }
 
@@ -136,7 +137,7 @@ void EffectPanel::OnSliderUpdate( wxScrollEvent& event ) {
       depthChange = new ChangeEffectDepth(effect->inst, effect->timeline, effect->type, val);
       break;
   }
-  Instrument::cleanAllDirt();
+  SharedManagerBase::updateClones();
 }
 
 void EffectPanel::OnSliderFinish( wxScrollEvent& event ) {
@@ -150,8 +151,8 @@ void EffectPanel::OnSliderFinish( wxScrollEvent& event ) {
 
 void EffectPanel::typeChangedCallback(char* type) {
   
-  Monitor::removeCallback( (void*)(&effect->inst->mod.depths[effect->timeline][oldType]), this );
-  Monitor::addCallback( &effect->inst->mod.depths[effect->timeline][effect->type], 
+  Monitor::removeCallback( (void*)(&effect->inst->sharedData->depths[effect->timeline][oldType]), this );
+  Monitor::addCallback( &effect->inst->sharedData->depths[effect->timeline][effect->type], 
                         new Callback<unsigned char, EffectPanel>
                           (this, &EffectPanel::depthChangedCallback) );
   oldType = effect->type;

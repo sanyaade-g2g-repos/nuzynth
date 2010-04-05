@@ -23,37 +23,21 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef TONE_H
-#define TONE_H
+#ifndef CLIP_H
+#define CLIP_H
 
-#include "Modulator.h"
-#include "SharedManager.h"
+#include <stdio.h>
+#include <vector>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+class Track;
 
-typedef struct Tone {
-  unsigned int id;
-  SharedManager<Modulator>* instrument;
-  float wavePhase;
-  float wavePhase2;
-  float waveSpeed;
-  float timelinePhases[NUM_TIMELINES-1];
-  int age;
-  float prevLowPassOutput;
-  float prevLowPassDelta;
-  float prevHighPassInput;
-  float prevHighPassOutput;
-  float prevBrownOutput;
-  char released;
-  char alive;
-} Tone;
+class Clip {
+public:
+  std::vector<Track*> tracks;
+  
+  //Clip();
+  //Clip(FILE*);
+  //~Clip();
+};
 
-void Tone_create(Tone* tone, unsigned int id, SharedManager<Modulator>* instrument, float hertz);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif // TONE_H
+#endif // CLIP_H

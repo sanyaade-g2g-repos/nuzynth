@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef CALLBACK_H 
-#define CALLBACK_H 
+#ifndef CALLBACK_H
+#define CALLBACK_H
 
 class CallbackBase {
 public:
@@ -44,4 +44,4 @@ public:
 };
 
 
-#endif // CALLBACK_H 
+#endif // CALLBACK_H

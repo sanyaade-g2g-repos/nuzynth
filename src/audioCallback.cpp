@@ -33,6 +33,8 @@
 #include "midi.h"
 #include "Tone.h"
 #include "keyboard.h"
+#include "Clip.h"
+#include "Track.h"
 
 
 
@@ -145,7 +147,7 @@ int audioCallback( const void *inputBuffer, void *outputBuffer,
     (void) userData;
     
     /// TODO: Make sure this is thread safe:
-    Instrument* inst = _song->instruments[0];
+    Instrument* inst = _song->clips[0]->tracks[0]->instrument;
     
     memset(outputBuffer, 0, (sizeof(float) * 2) * framesPerBuffer);
     
@@ -159,7 +161,7 @@ int audioCallback( const void *inputBuffer, void *outputBuffer,
         if (wasANoteStart) {
           for (int i = 0; i < MAX_MIDI_TONES; i++) {
             if (tones[i].alive == 0) {
-              Tone_create(&tones[i], pitchIndex, &inst->sharer, midi_frequencyFromPitchIndex(pitchIndex));
+              Tone_create(&tones[i], pitchIndex, inst, midi_frequencyFromPitchIndex(pitchIndex));
               break;
             }
           }
@@ -197,7 +199,7 @@ int audioCallback( const void *inputBuffer, void *outputBuffer,
         if (tonematrix[beat][i]) {
           for (int j = 0; j < MAX_MIDI_TONES; j++) {
             if (tones[j].alive == 0) {
-              Tone_create(&tones[j], pitchIndex, &inst->sharer, midi_frequencyFromPitchIndex(pitchIndex));
+              Tone_create(&tones[j], pitchIndex, inst, midi_frequencyFromPitchIndex(pitchIndex));
               break;
             }
           }
@@ -226,7 +228,7 @@ int audioCallback( const void *inputBuffer, void *outputBuffer,
       }
       for (int i = 0; i < MAX_MIDI_TONES; i++) {
         if (tones[i].alive == 0) {
-          Tone_create(&tones[i], *iter, &inst->sharer, midi_frequencyFromPitchIndex(*iter));
+          Tone_create(&tones[i], *iter, inst, midi_frequencyFromPitchIndex(*iter));
           break;
         }
       }
@@ -247,38 +249,37 @@ int audioCallback( const void *inputBuffer, void *outputBuffer,
     }
     releasedKeys.erase(releasedKeys.begin(), releasedKeys.end());
     
-    std::vector<ModulatorSharer*> localDeathRow;
+    //std::vector<Sharer<Modulator>*> localDeathRow;
     
     for (int i = 0; i < MAX_MIDI_TONES; i++) {
       Tone* tone = &tones[i];
       if (tone->alive == 0) continue;
       
-      if (tone->sharer->onDeathRow) {
-        localDeathRow.push_back(tone->sharer);
+      if (tone->instrument->isCondemned()) {
+        //localDeathRow.push_back(tone->instrument);
         tone->alive = 0;
-        tone->sharer->numReferences--;
+        //tone->instrument->abandon();
         continue;
       }
       
       float *out = (float*)outputBuffer;
       
       // loop!
-      Modulator* mod;
-      if (tone->sharer->useMod1) {
-        mod = tone->sharer->mod1;
-      } else {
-        mod = tone->sharer->mod2;
-      }
+      Modulator* mod = tone->instrument->getSharedDataClone();
       mod->used = 1;
       
       if (mod != 0) {
         mod->loopFunction(tone, mod, out, framesPerBuffer);
       }
       
+      /*
       if (tone->alive == 0) {
-        tone->sharer->numReferences--;
-      }
+        tone->instrument->numReferences--;
+      }*/
     }
+    
+    /// TODO: Mark all condemned things as abandoned. 
+    SharedManagerBase::abandonCondemnedManagers();
     
     float *out2 = (float*)outputBuffer;
     
@@ -335,17 +336,6 @@ int audioCallback( const void *inputBuffer, void *outputBuffer,
       //out2[i] = tanh(out2[i]);
       
       out2++;
-    }
-    
-    while (localDeathRow.size() > 0) {
-      ModulatorSharer* sharer = localDeathRow.back();
-      localDeathRow.pop_back();
-      for (int i = 0; i < MAX_MIDI_TONES; i++) {
-        if (tones[i].alive == 1 && tones[i].sharer == sharer) {
-          tones[i].alive = 0;
-          tones[i].sharer->numReferences--;
-        }
-      }
     }
     
     if (startRecording) {

@@ -44,10 +44,10 @@ ChangeEffectCreate::ChangeEffectCreate(Instrument* inst, char timeline, char typ
   }
   
   this->type = type;
-  depth = inst->mod.depths[timeline][type];
+  depth = inst->sharedData->depths[timeline][type];
   if ((int)timeline != CONSTANT_TIMELINE) {
     buffer = (unsigned char*) malloc(sizeof(unsigned char) * EFFECT_LENGTH);
-    memcpy(buffer, inst->mod.buffers[timeline][type], EFFECT_LENGTH * sizeof(unsigned char));
+    memcpy(buffer, inst->sharedData->buffers[timeline][type], EFFECT_LENGTH * sizeof(unsigned char));
   } else {
     buffer = 0;
   }
@@ -66,7 +66,7 @@ ChangeEffectCreate::~ChangeEffectCreate() {
 }
 
 void ChangeEffectCreate::doForwards() {
-  Effect* effect = inst->createEffect(timeline);
+  inst->createEffect(timeline);
   unsigned char* newBuffer = (unsigned char*) Pool_draw(Instrument::effectPool());
   memcpy(newBuffer, buffer, EFFECT_LENGTH * sizeof(unsigned char));
   inst->replaceEffectBuffer(type, timeline, newBuffer);

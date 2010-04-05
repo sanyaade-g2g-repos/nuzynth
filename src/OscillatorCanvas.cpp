@@ -260,7 +260,7 @@ void OscillatorCanvas::OnMouseMove(wxMouseEvent& event) {
     prevIndex = nextIndex;
   }
   
-  Instrument::cleanAllDirt();
+  SharedManagerBase::updateClones();
   
   //Refresh(); // Rely on the callback for refresh. If that fails, something's wrong.
 }
@@ -292,15 +292,17 @@ event.RightDClick() // returns true if was a double click event
 void OscillatorCanvas::setInstrument(Instrument* inst) {
   detachOldCallback();
   this->inst = inst;
-  Monitor::addCallback( &inst->mod.wave, 
-                        new Callback<float*, OscillatorCanvas>
-                          (this, &OscillatorCanvas::waveUpdated) );
+  if (inst != 0) {
+    Monitor::addCallback( &inst->sharedData->wave, 
+                          new Callback<float*, OscillatorCanvas>
+                            (this, &OscillatorCanvas::waveUpdated) );
+  }
   Refresh();
 }
 
 void OscillatorCanvas::detachOldCallback() {
   if (inst != 0) {
-    Monitor::removeCallback( (void*)(&inst->mod.wave), this);
+    Monitor::removeCallback( (void*)(&inst->sharedData->wave), this);
   }
   inst = 0;
 }

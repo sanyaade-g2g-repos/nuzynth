@@ -23,37 +23,20 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef TONE_H
-#define TONE_H
+#ifndef CHANGE_INSTRUMENT_CREATE_H
+#define CHANGE_INSTRUMENT_CREATE_H
 
-#include "Modulator.h"
-#include "SharedManager.h"
+#include "Change.h"
+#include "Instrument.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+class ChangeInstrumentCreate : public Change {
+public:
+  ChangeInstrumentCreate(Instrument* inst, bool destroy);
+  virtual ~ChangeInstrumentCreate();
+protected:
+  virtual void doForwards();
+  virtual void doBackwards();
+  Instrument* inst;
+};
 
-typedef struct Tone {
-  unsigned int id;
-  SharedManager<Modulator>* instrument;
-  float wavePhase;
-  float wavePhase2;
-  float waveSpeed;
-  float timelinePhases[NUM_TIMELINES-1];
-  int age;
-  float prevLowPassOutput;
-  float prevLowPassDelta;
-  float prevHighPassInput;
-  float prevHighPassOutput;
-  float prevBrownOutput;
-  char released;
-  char alive;
-} Tone;
-
-void Tone_create(Tone* tone, unsigned int id, SharedManager<Modulator>* instrument, float hertz);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif // TONE_H
+#endif // CHANGE_INSTRUMENT_CREATE_H

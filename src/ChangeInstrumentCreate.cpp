@@ -23,37 +23,32 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef TONE_H
-#define TONE_H
+#include <memory.h>
+#include "ChangeInstrumentCreate.h"
 
-#include "Modulator.h"
-#include "SharedManager.h"
+/// TODO: Finish this, but not until the song has tracks to assign the instrument to. 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct Tone {
-  unsigned int id;
-  SharedManager<Modulator>* instrument;
-  float wavePhase;
-  float wavePhase2;
-  float waveSpeed;
-  float timelinePhases[NUM_TIMELINES-1];
-  int age;
-  float prevLowPassOutput;
-  float prevLowPassDelta;
-  float prevHighPassInput;
-  float prevHighPassOutput;
-  float prevBrownOutput;
-  char released;
-  char alive;
-} Tone;
-
-void Tone_create(Tone* tone, unsigned int id, SharedManager<Modulator>* instrument, float hertz);
-
-#ifdef __cplusplus
+ChangeInstrumentCreate::ChangeInstrumentCreate(Instrument* inst, bool destroy)
+  : Change(destroy)
+{
+  this->inst = inst;
+  noop = false;
+  
+  if (destroy) {
+    doBackwards();
+  }
 }
-#endif
 
-#endif // TONE_H
+ChangeInstrumentCreate::~ChangeInstrumentCreate() {
+  if (!isDoneForwards()) {
+    inst->prepareToDie();
+  }
+}
+
+void ChangeInstrumentCreate::doForwards() {
+  //inst->;
+}
+
+void ChangeInstrumentCreate::doBackwards() {
+  //inst->song->;
+}
