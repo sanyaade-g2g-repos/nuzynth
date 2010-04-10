@@ -103,7 +103,7 @@ void TimelinePanel::OnSliderUpdate( wxScrollEvent &event ) {
       speedChange = new ChangeTimelineSpeed(inst, timeline, val);
       break;
   }
-  SharedManagerBase::updateClones();
+  SharedManagerBase::share();
   printf("slider updated, index: %d\n", val);
 }
 

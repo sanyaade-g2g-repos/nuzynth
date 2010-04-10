@@ -29,10 +29,8 @@
 std::vector<SharedManagerBase*> SharedManagerBase::managersWithOutdatedClones;
 std::vector<SharedManagerBase*> SharedManagerBase::managersWithExtraClones;
 std::vector<SharedManagerBase*> SharedManagerBase::condemnedManagers;
-Sharer<unsigned int, true> SharedManagerBase::cloneCount;
-Sharer<unsigned int, false> SharedManagerBase::receivedCloneCount;
-Sharer<unsigned int, true> SharedManagerBase::condemnedCount;
-Sharer<unsigned int, false> SharedManagerBase::abandonedCount;
+Sharer<unsigned int, true> SharedManagerBase::writeSharedSyncIndex;
+Sharer<unsigned int, false> SharedManagerBase::readSharedSyncIndex;
 
 SharedManagerBase::SharedManagerBase() : dirty(false), clonedIndex(0), condemnedIndex(0) {
   markSharedDataDirty();
@@ -50,8 +48,13 @@ void SharedManagerBase::markSharedDataDirty() {
 
 void SharedManagerBase::condemn() {
   printf("SharedManagerBase::condemn()\n");
-  unsigned int temp = SharedManagerBase::condemnedCount.read() + 1;
-  SharedManagerBase::condemnedCount.write(temp);
+  
+  /// TODO: Update the index in the share() function instead of in condemn()
+  ///       by adding the manager to a list like when we mark it as dirty.
+  ///       This will likely delay the overflow of writeSharedSyncIndex by
+  ///       batching changes into a single increment.
+  unsigned int temp = SharedManagerBase::writeSharedSyncIndex.read() + 1;
+  SharedManagerBase::writeSharedSyncIndex.write(temp);
   condemnedIndex = temp;
   SharedManagerBase::condemnedManagers.push_back(this);
 }
@@ -60,59 +63,55 @@ bool SharedManagerBase::isCondemned() {
   return condemnedIndex > 0;
 }
 
-void SharedManagerBase::updateClones() {
-  while (SharedManagerBase::managersWithOutdatedClones.size() > 0) {
-    printf("updating outdated clones\n");
-    SharedManagerBase* manager = SharedManagerBase::managersWithOutdatedClones.back();
-    SharedManagerBase::managersWithOutdatedClones.pop_back();
-    manager->updateClone();
-    manager->dirty = false;
-    
-    unsigned int temp = SharedManagerBase::cloneCount.read() + 1;
-    SharedManagerBase::cloneCount.write(temp);
-    manager->clonedIndex = temp;
-    
-    SharedManagerBase::managersWithExtraClones.push_back(manager);
+void SharedManagerBase::markOldStuffAsUnused() {
+  SharedManagerBase::readSharedSyncIndex.write(SharedManagerBase::writeSharedSyncIndex.read());
+}
+
+void SharedManagerBase::share() {
+  if (SharedManagerBase::managersWithOutdatedClones.size() > 0) {
+    unsigned int writeSharedSyncIndex = SharedManagerBase::writeSharedSyncIndex.read() + 1;
+    while (SharedManagerBase::managersWithOutdatedClones.size() > 0) {
+      printf("updating outdated clones\n");
+      SharedManagerBase* manager = SharedManagerBase::managersWithOutdatedClones.back();
+      SharedManagerBase::managersWithOutdatedClones.pop_back();
+      manager->updateClone();
+      manager->dirty = false;
+      
+      manager->clonedIndex = writeSharedSyncIndex;
+      
+      if (manager->isCondemned()) {
+        printf("harvesting condemned manager immediately! %p\n", manager);
+        manager->harvestExtraClones();
+      } else {
+        printf("pushing extra clones %p\n", manager);
+        SharedManagerBase::managersWithExtraClones.push_back(manager);
+      }
+    }
+    SharedManagerBase::writeSharedSyncIndex.write(writeSharedSyncIndex);
   }
   
-  unsigned int receivedCloneCount = SharedManagerBase::receivedCloneCount.read();
-  
+  unsigned int readSharedSyncIndex = SharedManagerBase::readSharedSyncIndex.read();
   while (SharedManagerBase::managersWithExtraClones.size() > 0) {
     printf("inspecting item with extra clones\n");
     SharedManagerBase* manager = SharedManagerBase::managersWithExtraClones.back();
-    if (receivedCloneCount >= manager->clonedIndex) {
-      printf("harvesting extra clones\n");
+    if (readSharedSyncIndex >= manager->clonedIndex) {
+      printf("harvesting extra clones %p\n", manager);
       manager->harvestExtraClones();
       SharedManagerBase::managersWithExtraClones.pop_back();
     } else {
       break; /// TODO: skip and try the next one.
     }
   }
-  SharedManagerBase::abandonedCount.write(SharedManagerBase::condemnedCount.read());
-}
-
-void SharedManagerBase::updateReceivedCloneCount() {
-  SharedManagerBase::receivedCloneCount.write(SharedManagerBase::cloneCount.read());
-}
-
-void SharedManagerBase::abandonCondemnedManagers() {
-  SharedManagerBase::abandonedCount.write(SharedManagerBase::condemnedCount.read());
-}
-
-void SharedManagerBase::deleteAbandonedManagers() {
+  
   while (SharedManagerBase::condemnedManagers.size() > 0) {
     printf("inspecting condemned item\n");
     SharedManagerBase* manager = SharedManagerBase::condemnedManagers.back();
-    if (manager->isAbandoned()) {
-      printf("killing abandoned item\n");
+    if (readSharedSyncIndex >= manager->condemnedIndex) {
+      printf("killing abandoned item %p\n", manager);
       SharedManagerBase::condemnedManagers.pop_back();
       delete manager;
     } else {
       break; /// TODO: skip and try the next one.
     }
   }
-}
-
-bool SharedManagerBase::isAbandoned() {
-  return (SharedManagerBase::abandonedCount.read() >= condemnedIndex);
 }

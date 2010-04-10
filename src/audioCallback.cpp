@@ -268,8 +268,7 @@ int audioCallback( const void *inputBuffer, void *outputBuffer,
       }
     }
     
-    SharedManagerBase::updateReceivedCloneCount();
-    SharedManagerBase::abandonCondemnedManagers();
+    SharedManagerBase::markOldStuffAsUnused();
     
     float *out2 = (float*)outputBuffer;
     

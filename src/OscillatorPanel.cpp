@@ -242,7 +242,7 @@ void OscillatorPanel::OnSliderMove(wxScrollEvent& event) {
   } else {
     sliderChange->update(val);
   }
-  SharedManagerBase::updateClones();
+  SharedManagerBase::share();
 }
 void OscillatorPanel::OnSliderRelease(wxScrollEvent& event) {
   if (sliderChange != 0) {

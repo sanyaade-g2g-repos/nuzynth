@@ -36,6 +36,7 @@ template <class Clone>
 class SharedManager : public SharedManagerBase {
 public:
   SharedManager(): SharedManagerBase(), sharedData(0), oldClones(0) {}
+  virtual ~SharedManager() {}
   
   Clone* sharedData;
   

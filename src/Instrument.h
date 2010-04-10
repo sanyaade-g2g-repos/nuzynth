@@ -56,7 +56,7 @@ public:
   
   Instrument(Song* song);
   Instrument(Song* song, FILE* file);
-  ~Instrument();
+  virtual ~Instrument();
   
   void save(FILE* file);
   void updateWave();

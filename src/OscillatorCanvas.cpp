@@ -260,7 +260,7 @@ void OscillatorCanvas::OnMouseMove(wxMouseEvent& event) {
     prevIndex = nextIndex;
   }
   
-  SharedManagerBase::updateClones();
+  SharedManagerBase::share();
   
   //Refresh(); // Rely on the callback for refresh. If that fails, something's wrong.
 }

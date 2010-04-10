@@ -133,8 +133,7 @@ void printLittleEndian(int val, int size, FILE* file) {
 
 
 void MyApp::OnIdle( wxIdleEvent& event ) {
-  SharedManagerBase::updateClones();
-  SharedManagerBase::deleteAbandonedManagers();
+  SharedManagerBase::share();
   
   if (stopRecording) {
     if (!recordingStopped) {

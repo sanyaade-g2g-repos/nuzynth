@@ -137,7 +137,7 @@ void EffectPanel::OnSliderUpdate( wxScrollEvent& event ) {
       depthChange = new ChangeEffectDepth(effect->inst, effect->timeline, effect->type, val);
       break;
   }
-  SharedManagerBase::updateClones();
+  SharedManagerBase::share();
 }
 
 void EffectPanel::OnSliderFinish( wxScrollEvent& event ) {
