@@ -30,7 +30,7 @@
 #include <vector>
 #include <map>
 #include <wx/wx.h>
-#include "SharedManager.h"
+#include "CloneManager.h"
 #include "Modulator.h"
 #include "Oscillator.h"
 #include "Effect.h"
@@ -46,7 +46,7 @@ extern const wxString voiceChoices[NUM_VOICES + 1];
 extern const char* timelineNames[NUM_TIMELINES];
 extern const unsigned char bufferFlags[NUM_TIMELINES];
 
-class Instrument : public SharedManager<Modulator> {
+class Instrument : public CloneManager<Modulator> {
 public:
   static std::map<SynthOptions, void*> synthFunctions;
   Oscillator oscillator;
@@ -76,7 +76,7 @@ public:
   static Pool* wavePool();
   
   void prepareToDie();
-  virtual void cleanSharedData();
+  virtual void updateClone();
   virtual void destroyOldClone(Modulator* newClone, Modulator* oldClone);
   
 private:

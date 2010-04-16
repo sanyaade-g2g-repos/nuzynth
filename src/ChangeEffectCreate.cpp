@@ -44,10 +44,10 @@ ChangeEffectCreate::ChangeEffectCreate(Instrument* inst, char timeline, char typ
   }
   
   this->type = type;
-  depth = inst->sharedData->depths[timeline][type];
+  depth = inst->original->depths[timeline][type];
   if ((int)timeline != CONSTANT_TIMELINE) {
     buffer = (unsigned char*) malloc(sizeof(unsigned char) * EFFECT_LENGTH);
-    memcpy(buffer, inst->sharedData->buffers[timeline][type], EFFECT_LENGTH * sizeof(unsigned char));
+    memcpy(buffer, inst->original->buffers[timeline][type], EFFECT_LENGTH * sizeof(unsigned char));
   } else {
     buffer = 0;
   }

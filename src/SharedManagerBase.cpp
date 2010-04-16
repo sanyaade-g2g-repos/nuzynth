@@ -26,23 +26,23 @@
 #include "SharedManagerBase.h"
 #include "memoryBarrier.h"
 
-std::vector<SharedManagerBase*> SharedManagerBase::managersWithOutdatedClones;
-std::vector<SharedManagerBase*> SharedManagerBase::managersWithExtraClones;
+std::vector<SharedManagerBase*> SharedManagerBase::dirtyManagers;
+std::vector<SharedManagerBase*> SharedManagerBase::bloatedManagers;
 std::vector<SharedManagerBase*> SharedManagerBase::condemnedManagers;
 Sharer<unsigned int, true> SharedManagerBase::writeSharedSyncIndex;
 Sharer<unsigned int, false> SharedManagerBase::readSharedSyncIndex;
 
 SharedManagerBase::SharedManagerBase() : dirty(false), clonedIndex(0), condemnedIndex(0) {
-  markSharedDataDirty();
+  markDirty();
 }
 
 SharedManagerBase::~SharedManagerBase() {}
 
-void SharedManagerBase::markSharedDataDirty() {
-  printf("SharedManagerBase::markSharedDataDirty()\n");
+void SharedManagerBase::markDirty() {
+  printf("SharedManagerBase::markDirty()\n");
   if (!dirty) {
     dirty = true;
-    SharedManagerBase::managersWithOutdatedClones.push_back(this);
+    SharedManagerBase::dirtyManagers.push_back(this);
   }
 }
 
@@ -68,36 +68,36 @@ void SharedManagerBase::markOldStuffAsUnused() {
 }
 
 void SharedManagerBase::share() {
-  if (SharedManagerBase::managersWithOutdatedClones.size() > 0) {
+  if (SharedManagerBase::dirtyManagers.size() > 0) {
     unsigned int writeSharedSyncIndex = SharedManagerBase::writeSharedSyncIndex.read() + 1;
-    while (SharedManagerBase::managersWithOutdatedClones.size() > 0) {
-      printf("updating outdated clones\n");
-      SharedManagerBase* manager = SharedManagerBase::managersWithOutdatedClones.back();
-      SharedManagerBase::managersWithOutdatedClones.pop_back();
-      manager->updateClone();
+    while (SharedManagerBase::dirtyManagers.size() > 0) {
+      printf("updating dirty managers\n");
+      SharedManagerBase* manager = SharedManagerBase::dirtyManagers.back();
+      SharedManagerBase::dirtyManagers.pop_back();
+      manager->update();
       manager->dirty = false;
       
       manager->clonedIndex = writeSharedSyncIndex;
       
       if (manager->isCondemned()) {
         printf("harvesting condemned manager immediately! %p\n", manager);
-        manager->harvestExtraClones();
+        manager->harvest();
       } else {
         printf("pushing extra clones %p\n", manager);
-        SharedManagerBase::managersWithExtraClones.push_back(manager);
+        SharedManagerBase::bloatedManagers.push_back(manager);
       }
     }
     SharedManagerBase::writeSharedSyncIndex.write(writeSharedSyncIndex);
   }
   
   unsigned int readSharedSyncIndex = SharedManagerBase::readSharedSyncIndex.read();
-  while (SharedManagerBase::managersWithExtraClones.size() > 0) {
+  while (SharedManagerBase::bloatedManagers.size() > 0) {
     printf("inspecting item with extra clones\n");
-    SharedManagerBase* manager = SharedManagerBase::managersWithExtraClones.back();
+    SharedManagerBase* manager = SharedManagerBase::bloatedManagers.back();
     if (readSharedSyncIndex >= manager->clonedIndex) {
       printf("harvesting extra clones %p\n", manager);
-      manager->harvestExtraClones();
-      SharedManagerBase::managersWithExtraClones.pop_back();
+      manager->harvest();
+      SharedManagerBase::bloatedManagers.pop_back();
     } else {
       break; /// TODO: skip and try the next one.
     }
@@ -109,6 +109,7 @@ void SharedManagerBase::share() {
     if (readSharedSyncIndex >= manager->condemnedIndex) {
       printf("killing abandoned item %p\n", manager);
       SharedManagerBase::condemnedManagers.pop_back();
+      manager->abandon();
       delete manager;
     } else {
       break; /// TODO: skip and try the next one.

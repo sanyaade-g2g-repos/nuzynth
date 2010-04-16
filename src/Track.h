@@ -28,16 +28,54 @@
 
 #include <stdio.h>
 #include <vector>
+#include "SharedManagerBase.h"
+#include "Note.h"
 
 class Instrument;
 
-class Track {
+class Track : public SharedManagerBase {
 public:
+  
+  Track();
+  ~Track();
+  
+  /// TODO: Put this in a Sharer?
   Instrument* instrument;
   
-  //Track();
-  //Track(FILE*);
-  //~Track();
+  Sharer<int, true> beatsPerBar;
+  Sharer<Note*, true> noteSharer;
+  Sharer<int, true> noteCountSharer;
+  Sharer<int*, true> barSharer;
+  Sharer<int, true> barCountSharer;
+  
+  int head;
+  int tail;
+  int nextID;
+  
+  std::vector<Note> notes;
+  std::vector<int> bars;
+  std::vector<int> emptyRuns;
+  
+  int allocateNote(int id);
+  int allocateNotePair(int start, int end, int pitch);
+  
+  void freeNote(int index);
+  void freeNoteLine(int beginning);
+  
+  void sortNote(int index, bool spliceOut = true);
+  
+  int compareNotes(int index1, int index2);
+  
+protected:
+  
+  // Don't override this function!
+  virtual void update();
+  
+  // Don't override this function!
+  virtual void harvest();
+  
+  // Don't override this function!
+  virtual void abandon();
 };
 
 #endif // TRACK_H

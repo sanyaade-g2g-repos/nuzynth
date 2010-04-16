@@ -94,14 +94,14 @@ EffectPanel::EffectPanel(wxScrolledWindow* scrollMe, Effect* effect, bool isCons
                         new Callback<char, EffectPanel>
                           (this, &EffectPanel::typeChangedCallback) );
   oldType = effect->type;
-  Monitor::addCallback( &effect->inst->sharedData->depths[effect->timeline][effect->type], 
+  Monitor::addCallback( &effect->inst->original->depths[effect->timeline][effect->type], 
                         new Callback<unsigned char, EffectPanel>
                           (this, &EffectPanel::depthChangedCallback) );
 }
 
 EffectPanel::~EffectPanel() {
   Monitor::removeCallback( (void*)(&effect->type), this );
-  Monitor::removeCallback( (void*)(&effect->inst->sharedData->depths[effect->timeline][effect->type]), this );
+  Monitor::removeCallback( (void*)(&effect->inst->original->depths[effect->timeline][effect->type]), this );
   if (effectCanvas != 0) effectCanvas->setEffect(0); // detach callbacks
 }
 
@@ -151,8 +151,8 @@ void EffectPanel::OnSliderFinish( wxScrollEvent& event ) {
 
 void EffectPanel::typeChangedCallback(char* type) {
   
-  Monitor::removeCallback( (void*)(&effect->inst->sharedData->depths[effect->timeline][oldType]), this );
-  Monitor::addCallback( &effect->inst->sharedData->depths[effect->timeline][effect->type], 
+  Monitor::removeCallback( (void*)(&effect->inst->original->depths[effect->timeline][oldType]), this );
+  Monitor::addCallback( &effect->inst->original->depths[effect->timeline][effect->type], 
                         new Callback<unsigned char, EffectPanel>
                           (this, &EffectPanel::depthChangedCallback) );
   oldType = effect->type;

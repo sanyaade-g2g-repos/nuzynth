@@ -50,12 +50,12 @@ float randomZeroCrossing(float* wave) {
   return result;
 }
 
-void Tone_create(Tone* tone, unsigned int id, SharedManager<Modulator>* instrument, float hertz) {
+void Tone_create(Tone* tone, unsigned int id, CloneManager<Modulator>* instrument, float hertz) {
   tone->id = id;
   tone->instrument = instrument;
   //instrument->numReferences++;
   
-  Modulator* mod = instrument->getSharedDataClone();
+  Modulator* mod = instrument->getClone();
   tone->wavePhase = randomZeroCrossing(mod->wave);
   tone->wavePhase2 = randomZeroCrossing(mod->wave);
   //tone->wavePhase2 = fastRandom(0.0f, (float) SAMPLES_IN_WAVE);

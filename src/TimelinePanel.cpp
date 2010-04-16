@@ -129,7 +129,7 @@ void TimelinePanel::setInstrument(Instrument* inst) {
     Monitor::removeCallback(&this->inst->timelineEffectCount[timeline], this);
     
     if (speedBox != 0) { /// TODO: && numchilden != 0 ???
-      Monitor::removeCallback( (void*)(&this->inst->sharedData->speeds[timeline]), this );
+      Monitor::removeCallback( (void*)(&this->inst->original->speeds[timeline]), this );
     }
   }
   
@@ -150,7 +150,7 @@ void TimelinePanel::setInstrument(Instrument* inst) {
       speedBox->Show(children.size() != 0);
       speedSlider->SetValue(this->inst->getSpeed(timeline));
       
-      Monitor::addCallback( &inst->sharedData->speeds[timeline], 
+      Monitor::addCallback( &inst->original->speeds[timeline], 
                             new Callback<unsigned char, TimelinePanel>
                               (this, &TimelinePanel::speedChangedCallback) );
     }

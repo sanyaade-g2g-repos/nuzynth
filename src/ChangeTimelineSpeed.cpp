@@ -32,7 +32,7 @@ ChangeTimelineSpeed::ChangeTimelineSpeed(Instrument* inst, char timeline, unsign
 {
   this->inst = inst;
   this->timeline = timeline;
-  before = inst->sharedData->speeds[timeline];
+  before = inst->original->speeds[timeline];
   after = value;
   noop = (before == after);
   

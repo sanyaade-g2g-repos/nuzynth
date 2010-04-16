@@ -293,7 +293,7 @@ void OscillatorCanvas::setInstrument(Instrument* inst) {
   detachOldCallback();
   this->inst = inst;
   if (inst != 0) {
-    Monitor::addCallback( &inst->sharedData->wave, 
+    Monitor::addCallback( &inst->original->wave, 
                           new Callback<float*, OscillatorCanvas>
                             (this, &OscillatorCanvas::waveUpdated) );
   }
@@ -302,7 +302,7 @@ void OscillatorCanvas::setInstrument(Instrument* inst) {
 
 void OscillatorCanvas::detachOldCallback() {
   if (inst != 0) {
-    Monitor::removeCallback( (void*)(&inst->sharedData->wave), this);
+    Monitor::removeCallback( (void*)(&inst->original->wave), this);
   }
   inst = 0;
 }

@@ -23,39 +23,25 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <memory.h>
-#include "Monitor.h"
-#include "ChangeOscillatorSlider.h"
+#ifndef NOTE_H
+#define NOTE_H
 
-ChangeOscillatorSlider::ChangeOscillatorSlider(Instrument* inst, unsigned char* address, unsigned char newValue) 
-  : Change(false)
-{
-  this->inst = inst;
-  this->address = address;
-  before = *address;
-  after = newValue;
-  noop = false;
-  
-  doForwards();
-}
+#define NOTE_DUMMY (0x00000001)
+#define NOTE_START (0x00000002)
+#define NOTE_END   (0x00000004)
 
-ChangeOscillatorSlider::~ChangeOscillatorSlider() {}
 
-void ChangeOscillatorSlider::update(unsigned char newValue) {
-  after = newValue;
-  doForwards();
-}
+struct Note {
+  int prev;
+  int next;
+  int prevJoined;
+  int nextJoined;
+  int type;
+  int id;
+  int beat;
+  int pitch;
+  //float hertz;
+  bool on;
+};
 
-void ChangeOscillatorSlider::doForwards() {
-  if (*address == after) return;
-  Monitor::setProperty(address, after);
-  inst->oscillator.dirty = true;
-  inst->markDirty();
-}
-
-void ChangeOscillatorSlider::doBackwards() {
-  if (*address == before) return;
-  Monitor::setProperty(address, before);
-  inst->oscillator.dirty = true;
-  inst->markDirty();
-}
+#endif // NOTE_H

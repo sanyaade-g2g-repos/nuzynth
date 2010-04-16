@@ -33,7 +33,7 @@ ChangeEffectDepth::ChangeEffectDepth(Instrument* inst, char timeline, char type,
   this->inst = inst;
   this->timeline = timeline;
   this->type = type;
-  before = inst->sharedData->depths[timeline][type];
+  before = inst->original->depths[timeline][type];
   after = value;
   noop = (before == after);
   

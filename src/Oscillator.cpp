@@ -26,16 +26,21 @@
 #include "Oscillator.h"
 #include "math.h"
 #include "random.h"
+#include "Instrument.h"
+#include "Pool.h"
 
 fftwf_complex angles[SAMPLES_IN_WAVE >> 1];
-fftwf_complex* scratch;
+fftwf_complex* spectrum;
+//float* tempWave;
 fftwf_plan plan;
-bool scratchInitialized = false;
+bool spectrumInitialized = false;
 bool planInitialized = false;
 
-void initializeScratchAndAngles() {
-  scratch = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * SAMPLES_IN_WAVE);
-  scratchInitialized = true;
+void initializeSpectrumAndAngles() {
+  spectrum = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * SAMPLES_IN_WAVE);
+  spectrumInitialized = true;
+  
+  //tempWave = (float*) Pool_draw(Instrument::wavePool());
   
   for (int i = 0; i < (SAMPLES_IN_WAVE >> 1); i++) {
     float angle = fastRandom(-M_PI, M_PI);
@@ -45,7 +50,7 @@ void initializeScratchAndAngles() {
 }
 
 void Oscillator_init(Oscillator* oscillator) {
-  if (scratchInitialized == false) initializeScratchAndAngles();
+  if (spectrumInitialized == false) initializeSpectrumAndAngles();
   
   HarmonicSet_init(&oscillator->harmonicSet[0], false);
   for (int i = 1; i < NUM_VOICES; i++) {
@@ -60,20 +65,20 @@ void Oscillator_init(Oscillator* oscillator) {
 void Oscillator_renderWave(Oscillator* oscillator, float* wave) {
   
   if (planInitialized == false) {
-    plan = fftwf_plan_dft_c2r_1d(SAMPLES_IN_WAVE, scratch, wave, FFTW_MEASURE);
+    plan = fftwf_plan_dft_c2r_1d(SAMPLES_IN_WAVE, spectrum, wave, FFTW_MEASURE);
     planInitialized = true;
   }
   
-  scratch[                   0][0] = 0;
-  scratch[                   0][1] = 0;
-  scratch[SAMPLES_IN_WAVE >> 1][0] = 0;
-  scratch[SAMPLES_IN_WAVE >> 1][1] = 0;
+  spectrum[                   0][0] = 0;
+  spectrum[                   0][1] = 0;
+  spectrum[SAMPLES_IN_WAVE >> 1][0] = 0;
+  spectrum[SAMPLES_IN_WAVE >> 1][1] = 0;
   for (int i = 1; i < (SAMPLES_IN_WAVE >> 1); i++) {
     float value = oscillator->noise.linearSpectrum[i];
-    scratch[                  i][0] = value * angles[i][0];
-    scratch[                  i][1] = value * angles[i][1];
-    scratch[SAMPLES_IN_WAVE - i][0] = value * angles[i][0];
-    scratch[SAMPLES_IN_WAVE - i][1] = -value * angles[i][1];
+    spectrum[                  i][0] = value * angles[i][0];
+    spectrum[                  i][1] = value * angles[i][1];
+    spectrum[SAMPLES_IN_WAVE - i][0] = value * angles[i][0];
+    spectrum[SAMPLES_IN_WAVE - i][1] = -value * angles[i][1];
   }
   
   for (int i = 0; i < NUM_VOICES; i++) {
@@ -96,30 +101,31 @@ void Oscillator_renderWave(Oscillator* oscillator, float* wave) {
       width += 1.0f;
       float peak = power / sqrt(width);
       
-      scratch[                  middle][0] += peak * angles[middle][0];
-      scratch[                  middle][1] += peak * angles[middle][1];
-      scratch[SAMPLES_IN_WAVE - middle][0] += peak * angles[middle][0];
-      scratch[SAMPLES_IN_WAVE - middle][1] += -peak * angles[middle][1];
+      spectrum[                  middle][0] += peak * angles[middle][0];
+      spectrum[                  middle][1] += peak * angles[middle][1];
+      spectrum[SAMPLES_IN_WAVE - middle][0] += peak * angles[middle][0];
+      spectrum[SAMPLES_IN_WAVE - middle][1] += -peak * angles[middle][1];
       
       for (int k = 1; k < width; k++) {
         float value = peak;
         if (middle + k < (SAMPLES_IN_WAVE >> 1)) {
-          scratch[                  (middle + k)][0] += value * angles[middle + k][0];
-          scratch[                  (middle + k)][1] += value * angles[middle + k][1];
-          scratch[SAMPLES_IN_WAVE - (middle + k)][0] += value * angles[middle + k][0];
-          scratch[SAMPLES_IN_WAVE - (middle + k)][1] += -value * angles[middle + k][1];
+          spectrum[                  (middle + k)][0] += value * angles[middle + k][0];
+          spectrum[                  (middle + k)][1] += value * angles[middle + k][1];
+          spectrum[SAMPLES_IN_WAVE - (middle + k)][0] += value * angles[middle + k][0];
+          spectrum[SAMPLES_IN_WAVE - (middle + k)][1] += -value * angles[middle + k][1];
         }
         if (middle - k > 1) {
-          scratch[                  (middle - k)][0] += value * angles[middle - k][0];
-          scratch[                  (middle - k)][1] += value * angles[middle - k][1];
-          scratch[SAMPLES_IN_WAVE - (middle - k)][0] += value * angles[middle - k][0];
-          scratch[SAMPLES_IN_WAVE - (middle - k)][1] += -value * angles[middle - k][1];
+          spectrum[                  (middle - k)][0] += value * angles[middle - k][0];
+          spectrum[                  (middle - k)][1] += value * angles[middle - k][1];
+          spectrum[SAMPLES_IN_WAVE - (middle - k)][0] += value * angles[middle - k][0];
+          spectrum[SAMPLES_IN_WAVE - (middle - k)][1] += -value * angles[middle - k][1];
         }
       }
     }
   }
   
-  fftwf_execute_dft_c2r(plan, scratch, wave);
+  fftwf_execute_dft_c2r(plan, spectrum, wave);
+  
   
   float max = 0.0f;
   for (int i = 0; i < SAMPLES_IN_WAVE; i++) {

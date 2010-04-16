@@ -23,39 +23,25 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <memory.h>
-#include "Monitor.h"
-#include "ChangeOscillatorSlider.h"
+#include "Clip.h"
 
-ChangeOscillatorSlider::ChangeOscillatorSlider(Instrument* inst, unsigned char* address, unsigned char newValue) 
-  : Change(false)
-{
-  this->inst = inst;
-  this->address = address;
-  before = *address;
-  after = newValue;
-  noop = false;
+
+Clip::Clip() {
+
+}
+
+Clip::~Clip() {
+
+}
+
+void Clip::update() {
   
-  doForwards();
 }
 
-ChangeOscillatorSlider::~ChangeOscillatorSlider() {}
-
-void ChangeOscillatorSlider::update(unsigned char newValue) {
-  after = newValue;
-  doForwards();
+void Clip::harvest() {
+  
 }
 
-void ChangeOscillatorSlider::doForwards() {
-  if (*address == after) return;
-  Monitor::setProperty(address, after);
-  inst->oscillator.dirty = true;
-  inst->markDirty();
-}
-
-void ChangeOscillatorSlider::doBackwards() {
-  if (*address == before) return;
-  Monitor::setProperty(address, before);
-  inst->oscillator.dirty = true;
-  inst->markDirty();
+void Clip::abandon() {
+  
 }

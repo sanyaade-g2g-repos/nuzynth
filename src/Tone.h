@@ -27,7 +27,7 @@
 #define TONE_H
 
 #include "Modulator.h"
-#include "SharedManager.h"
+#include "CloneManager.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,7 +35,7 @@ extern "C" {
 
 typedef struct Tone {
   unsigned int id;
-  SharedManager<Modulator>* instrument;
+  CloneManager<Modulator>* instrument;
   float wavePhase;
   float wavePhase2;
   float waveSpeed;
@@ -50,7 +50,7 @@ typedef struct Tone {
   char alive;
 } Tone;
 
-void Tone_create(Tone* tone, unsigned int id, SharedManager<Modulator>* instrument, float hertz);
+void Tone_create(Tone* tone, unsigned int id, CloneManager<Modulator>* instrument, float hertz);
 
 #ifdef __cplusplus
 }

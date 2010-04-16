@@ -32,18 +32,6 @@
 
 class SharedManagerBase {
 public:
-  SharedManagerBase();
-  virtual ~SharedManagerBase();
-  
-  // Indicate that the manager's data should be cloned and shared
-  // next time updateClones() is called. 
-  void markSharedDataDirty();
-  
-  // Indicate that the manager is scheduled to be deleted as soon as all
-  // threads stop using it:
-  void condemn();
-  
-  bool isCondemned();
   
   // To be called frequently to share data and destroy old data:
   static void share();
@@ -52,17 +40,32 @@ public:
   // outdated clones or abandoned  anymore. 
   static void markOldStuffAsUnused();
   
+  
+  SharedManagerBase();
+  virtual ~SharedManagerBase();
+  
+  // Indicate that the manager's data should be cloned and shared
+  // next time updateClones() is called. 
+  void markDirty();
+  
+  // Indicate that the manager is scheduled to be deleted as soon as all
+  // threads stop using it:
+  void condemn();
+  
+  bool isCondemned();
+  
 protected:
-  virtual void updateClone() = 0;
-  virtual void harvestExtraClones() = 0;
+  virtual void update() = 0;
+  virtual void harvest() = 0;
+  virtual void abandon() = 0;
   
 private:
   bool dirty;
   unsigned int clonedIndex;
   unsigned int condemnedIndex;
   
-  static std::vector<SharedManagerBase*> managersWithOutdatedClones;
-  static std::vector<SharedManagerBase*> managersWithExtraClones;
+  static std::vector<SharedManagerBase*> dirtyManagers;
+  static std::vector<SharedManagerBase*> bloatedManagers;
   static std::vector<SharedManagerBase*> condemnedManagers;
   static Sharer<unsigned int, true> writeSharedSyncIndex;
   static Sharer<unsigned int, false> readSharedSyncIndex;

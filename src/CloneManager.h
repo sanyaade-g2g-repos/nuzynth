@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef SHARED_MANAGER_H
-#define SHARED_MANAGER_H
+#ifndef CLONE_MANAGER_H
+#define CLONE_MANAGER_H
 
 #include <vector>
 #include "Pool.h"
@@ -33,34 +33,34 @@
 #include "SinglyLinkedList.h"
 
 template <class Clone>
-class SharedManager : public SharedManagerBase {
+class CloneManager : public SharedManagerBase {
 public:
-  SharedManager(): SharedManagerBase(), sharedData(0), oldClones(0) {}
-  virtual ~SharedManager() {}
+  CloneManager(): SharedManagerBase(), original(0), oldClones(0) {}
+  virtual ~CloneManager() {}
   
-  Clone* sharedData;
+  Clone* original;
   
-  Clone* getSharedDataClone() {
+  Clone* getClone() {
     return sharer.read();
   }
   
 protected:
   
   // Override this function! 
-  virtual void cleanSharedData() = 0;
+  virtual void updateClone() = 0;
   
   // Override this function! 
   virtual void destroyOldClone(Clone* newClone, Clone* oldClone) = 0;
   
   // But don't override this function!
-  virtual void updateClone() {
-    printf("SharedManager::updateClone()\n");
+  virtual void update() {
+    printf("CloneManager::update()\n");
     // Make any last minute fixes to the data before sharing it:
-    cleanSharedData();
+    updateClone();
     
     // Create a clone and share it:
-    publishSharedData();
-    Clone* newClone = getSharedDataClone();
+    publishClone();
+    Clone* newClone = getClone();
     
     // Now add this clone to the list of old clones so that
     // we can destroy it later. 
@@ -74,8 +74,8 @@ protected:
   // Don't override this function!
   // Assumes the first clone is already received and proceeds to 
   // harvest all of the remaining clones. 
-  virtual void harvestExtraClones() {
-    printf("SharedManager::harvestExtraClones()\n");
+  virtual void harvest() {
+    printf("CloneManager::harvest()\n");
     SinglyLinkedList *node1, *node2;
     node1 = oldClones;
     
@@ -89,7 +89,7 @@ protected:
       
       destroyOldClone(clone1, clone2);
       
-      // This would also be a good place to free any unused loop functions, except I'm 
+      // This would also be a good place to free any unused synth functions, except I'm 
       // planning on saving those in a map indefinitely...
       clone1 = clone2;
       node2 = node2->next;
@@ -101,13 +101,18 @@ protected:
     while (node2 != 0) {
       node1 = node2;
       node2 = node2->next;
-      Pool_return(sharedPool(), node1->val);
+      Pool_return(clonePool(), node1->val);
       free(node1);
     }
   }
   
-  static Pool* sharedPool() {
-    printf("SharedManager::sharedPool()\n");
+  // Don't override this function!
+  virtual void abandon() {
+    /// TODO: Use this to abandon the one remaining clone. 
+  }
+  
+  static Pool* clonePool() {
+    printf("CloneManager::clonePool()\n");
     static Pool* pool = 0;
     if (pool == 0) {
       pool = (Pool*)malloc(sizeof(Pool));
@@ -116,10 +121,10 @@ protected:
     return pool;
   }
   
-  void publishSharedData() {
-    printf("SharedManager::publishSharedData()\n");
-    Clone* copy = (Clone*) Pool_draw(sharedPool());
-    memcpy(copy, sharedData, sizeof(Clone));
+  void publishClone() {
+    printf("CloneManager::publishClone()\n");
+    Clone* copy = (Clone*) Pool_draw(clonePool());
+    memcpy(copy, original, sizeof(Clone));
     sharer.write(copy);
   }
   
@@ -128,4 +133,4 @@ private:
   SinglyLinkedList* oldClones;
 };
 
-#endif // SHARED_MANAGER_H
+#endif // CLONE_MANAGER_H

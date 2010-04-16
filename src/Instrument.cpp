@@ -121,7 +121,7 @@ Instrument::Instrument(Song* song) {
   this->song = song;
   setDefaultValues();
   updateWave();
-  updateClone();
+  update();
 }
 
 Instrument::Instrument(Song* song, FILE* file) {
@@ -191,7 +191,7 @@ Instrument::Instrument(Song* song, FILE* file) {
     if (!isConstant) {
       int speed;
       timelineXML->QueryIntAttribute("speed", &speed);
-      sharedData->speeds[timelineNum] = speed;
+      original->speeds[timelineNum] = speed;
     }
     
     TiXmlElement* effectXML = timelineXML->FirstChildElement("effect");
@@ -210,13 +210,13 @@ Instrument::Instrument(Song* song, FILE* file) {
       {
         int depth;
         effectXML->QueryIntAttribute("depth", &depth);
-        sharedData->depths[timelineNum][effectNum] = depth;
+        original->depths[timelineNum][effectNum] = depth;
       }
       
       if (!isConstant) {
         const char* curveString = effectXML->Attribute("curve");
         unsigned char* buffer = (unsigned char*)Pool_draw(effectPool());
-        sharedData->buffers[timelineNum][effectNum] = buffer;
+        original->buffers[timelineNum][effectNum] = buffer;
         readCommaSeparatedChars(buffer, EFFECT_LENGTH, curveString);
       }
       
@@ -227,13 +227,13 @@ Instrument::Instrument(Song* song, FILE* file) {
       timelines[timelineNum].push_back(effect);
       Monitor::setProperty(&timelineEffectCount[timelineNum], timelineEffectCount[timelineNum] + 1);
       
-      sharedData->synthOptions.options[effectNum] |= bufferFlags[timelineNum];
+      original->synthOptions.options[effectNum] |= bufferFlags[timelineNum];
     }
   }
   
   NoiseSpectrum_updateAll(&oscillator.noise);
   updateWave();
-  updateClone();
+  update();
 }
 
 void Instrument::readCommaSeparatedChars(unsigned char* dest, int maxCount, const char* ascii) {
@@ -259,14 +259,14 @@ void Instrument::readCommaSeparatedChars(unsigned char* dest, int maxCount, cons
 Instrument::~Instrument() {}
 
 void Instrument::setDefaultValues() {
-  sharedData = (Modulator*) Pool_draw(sharedPool());
-  memset(sharedData, 0, sizeof(Modulator));
+  original = (Modulator*) Pool_draw(clonePool());
+  memset(original, 0, sizeof(Modulator));
   
-  sharedData->speeds[0] = 80;
-  sharedData->speeds[1] = 30;
-  sharedData->speeds[2] = 100;
-  sharedData->speeds[3] = 60;
-  sharedData->wave = 0;
+  original->speeds[0] = 80;
+  original->speeds[1] = 30;
+  original->speeds[2] = 100;
+  original->speeds[3] = 60;
+  original->wave = 0;
   
   Oscillator_init(&oscillator);
 }
@@ -318,7 +318,7 @@ void Instrument::save(FILE* file) {
   for (int timeline = 0; timeline < NUM_TIMELINES; timeline++) {
     TiXmlElement timelineXML("timeline");
     timelineXML.SetAttribute("type", timelineNames[timeline]);
-    if (timeline != CONSTANT_TIMELINE) timelineXML.SetAttribute("speed", sharedData->speeds[timeline]);
+    if (timeline != CONSTANT_TIMELINE) timelineXML.SetAttribute("speed", original->speeds[timeline]);
     std::vector<Effect*>::iterator iter = timelines[timeline].begin();
     for (; iter != timelines[timeline].end(); iter++) {
       Effect* effect = *iter;
@@ -326,10 +326,10 @@ void Instrument::save(FILE* file) {
       effectXML.SetAttribute("type", effectNames[effect->type]);
       
       if (timeline == (int) CONSTANT_TIMELINE || effectScaleType[effect->type])
-        effectXML.SetAttribute("depth", sharedData->depths[effect->timeline][effect->type]);
+        effectXML.SetAttribute("depth", original->depths[effect->timeline][effect->type]);
       
       if (timeline != (int) CONSTANT_TIMELINE) {
-        unsigned char* buffer = sharedData->buffers[effect->timeline][effect->type];
+        unsigned char* buffer = original->buffers[effect->timeline][effect->type];
         std::string bufferString;
         char shortString[10];
         for (int k = 0; k < EFFECT_LENGTH; k++) {
@@ -356,8 +356,8 @@ void Instrument::save(FILE* file) {
 }
 
 void Instrument::prepareToDie() {
-  markSharedDataDirty();
-  sharedData->wave = 0; /// this is not a memory leak because it will be compared against the previous modulator's wave.
+  markDirty();
+  original->wave = 0; /// this is not a memory leak because it will be compared against the previous modulator's wave.
   for (int timeline = 0; timeline < NUM_TIMELINES; timeline++) {
     while (timelines[timeline].size() > 0) {
       destroyEffect(timelines[timeline].back());
@@ -367,20 +367,20 @@ void Instrument::prepareToDie() {
   condemn();
 }
 
-void Instrument::cleanSharedData() {
-  printf("Instrument::cleanSharedData()\n");
+void Instrument::updateClone() {
+  printf("Instrument::updateClone()\n");
   if (oscillator.dirty) {
     updateWave();
   }
   
   void* synthPointer;
-  if (synthFunctions.find(sharedData->synthOptions) != synthFunctions.end()) {
-    synthPointer = synthFunctions[sharedData->synthOptions];
+  if (synthFunctions.find(original->synthOptions) != synthFunctions.end()) {
+    synthPointer = synthFunctions[original->synthOptions];
   } else {
-    synthPointer = RunSynthJIT(sharedData->synthOptions);
-    synthFunctions[sharedData->synthOptions] = synthPointer;
+    synthPointer = RunSynthJIT(original->synthOptions);
+    synthFunctions[original->synthOptions] = synthPointer;
   }
-  sharedData->synthFunction = (void (*)(struct Tone*, struct Modulator*, float*, int)) synthPointer;
+  original->synthFunction = (void (*)(struct Tone*, struct Modulator*, float*, int)) synthPointer;
 }
 
 void Instrument::destroyOldClone(Modulator* newClone, Modulator* oldClone) {
@@ -404,15 +404,15 @@ void Instrument::destroyOldClone(Modulator* newClone, Modulator* oldClone) {
 
 void Instrument::updateWave()
 {
-  float* wave = sharedData->wave;
-  markSharedDataDirty();
+  float* wave = original->wave;
+  markDirty();
   //wave = (float*) fftwf_malloc(sizeof(float) * SAMPLES_IN_WAVE);
   
   wave = (float*) Pool_draw(wavePool());
   
   Oscillator_renderWave(&oscillator, wave);
   
-  Monitor::setProperty(&sharedData->wave, wave);
+  Monitor::setProperty(&original->wave, wave);
 }
 
 Pool* Instrument::effectPool() {
@@ -434,48 +434,48 @@ Pool* Instrument::wavePool() {
 
 unsigned char* Instrument::copyEffectBuffer(int effect, int timeline) {
   unsigned char* buffer = (unsigned char*) Pool_draw(effectPool());
-  unsigned char* oldBuffer = sharedData->buffers[timeline][effect];
+  unsigned char* oldBuffer = original->buffers[timeline][effect];
   memcpy(buffer, oldBuffer, EFFECT_LENGTH * sizeof(unsigned char));
   return buffer;
 }
 
 void Instrument::replaceEffectBuffer(int effect, int timeline, unsigned char* newBuffer) {
-  Monitor::setProperty(&sharedData->buffers[timeline][effect], newBuffer);
-  markSharedDataDirty();
+  Monitor::setProperty(&original->buffers[timeline][effect], newBuffer);
+  markDirty();
 }
 
 unsigned char Instrument::getDepth(int type, int timeline) {
-  return sharedData->depths[timeline][type];
+  return original->depths[timeline][type];
 }
 
 void Instrument::setDepth(int type, int timeline, unsigned char val) {
-  if (sharedData->depths[timeline][type] == val) return;
-  Monitor::setProperty(&sharedData->depths[timeline][type], val);
-  markSharedDataDirty();
+  if (original->depths[timeline][type] == val) return;
+  Monitor::setProperty(&original->depths[timeline][type], val);
+  markDirty();
 }
 
 unsigned char Instrument::getSpeed(int timeline) {
-  return sharedData->speeds[timeline];
+  return original->speeds[timeline];
 }
 
 void Instrument::setSpeed(int timeline, unsigned char val) {
-  if (sharedData->speeds[timeline] == val) return;
-  markSharedDataDirty();
-  Monitor::setProperty(&sharedData->speeds[timeline], val);
+  if (original->speeds[timeline] == val) return;
+  markDirty();
+  Monitor::setProperty(&original->speeds[timeline], val);
 }
 
 void Instrument::setEffectEnabled(int type, int timeline, bool enable) {
   unsigned char flag = bufferFlags[timeline];
-  bool wasEnabled = GET_OPTION(sharedData->synthOptions.options[type], flag);
+  bool wasEnabled = GET_OPTION(original->synthOptions.options[type], flag);
   if (enable == wasEnabled) return;
   
-  markSharedDataDirty();
-  Monitor::setProperty(&sharedData->synthOptions.options[type], 
-             SET_OPTION(sharedData->synthOptions.options[type], flag, enable));
+  markDirty();
+  Monitor::setProperty(&original->synthOptions.options[type], 
+             SET_OPTION(original->synthOptions.options[type], flag, enable));
   
   if (timeline == CONSTANT_TIMELINE) return; // don't create a buffer for constant effect.
   
-  unsigned char** bufferPtr = &sharedData->buffers[timeline][type];
+  unsigned char** bufferPtr = &original->buffers[timeline][type];
   if (enable) {
     unsigned char* newBuffer = (unsigned char*) Pool_draw(effectPool());
     
@@ -511,7 +511,7 @@ void Instrument::setEffectEnabled(int type, int timeline, bool enable) {
 
 int Instrument::findUnusedEffectType(int timeline) {
   for (int i = 0; i < NUM_EFFECT_TYPES; i++) {
-    if ((sharedData->synthOptions.options[i] & bufferFlags[timeline]) == 0) {
+    if ((original->synthOptions.options[i] & bufferFlags[timeline]) == 0) {
       return i;
     }
   }
@@ -554,7 +554,7 @@ void Instrument::switchEffectType(char timeline, char before, char after) {
   
   Effect* effect = 0;
   Effect* other = 0;
-  unsigned char** buffers = sharedData->buffers[timeline];
+  unsigned char** buffers = original->buffers[timeline];
   for (; iter != timelines[timeline].end(); iter++) {
     if ((*iter)->type == before) effect = *iter;
     if ((*iter)->type == after) other = *iter;
@@ -576,7 +576,7 @@ void Instrument::switchEffectType(char timeline, char before, char after) {
   }
   
   if (timeline != (int)CONSTANT_TIMELINE) {
-    memcpy(buffer, sharedData->buffers[timeline][before], sizeof(unsigned char) * EFFECT_LENGTH);
+    memcpy(buffer, original->buffers[timeline][before], sizeof(unsigned char) * EFFECT_LENGTH);
   }
   
   setDepth(after, timeline, oldDepth);
@@ -586,6 +586,6 @@ void Instrument::switchEffectType(char timeline, char before, char after) {
   setEffectEnabled(after, timeline, true);
   
   if (timeline != (int)CONSTANT_TIMELINE) {
-    memcpy(sharedData->buffers[timeline][after], buffer, sizeof(unsigned char) * EFFECT_LENGTH);
+    memcpy(original->buffers[timeline][after], buffer, sizeof(unsigned char) * EFFECT_LENGTH);
   }
 }

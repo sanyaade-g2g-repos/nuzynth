@@ -75,7 +75,7 @@ void ChangeOscillatorDraw::update(int prevIndex, int nextIndex, float value) {
                               (float) (topIndex + 1)  / (float) NOISE_SAMPLES_PER_OCTAVE - SUB_OCTAVES);
   }
   inst->oscillator.dirty = true;
-  inst->markSharedDataDirty();
+  inst->markDirty();
   
   if (bottomIndex < lowestIndex) lowestIndex = bottomIndex;
   if (topIndex > highestIndex) highestIndex = topIndex;
@@ -95,7 +95,7 @@ void ChangeOscillatorDraw::swap() {
                               (float) (highestIndex +1) / (float) NOISE_SAMPLES_PER_OCTAVE - SUB_OCTAVES);
   }
   inst->oscillator.dirty = true;
-  inst->markSharedDataDirty();
+  inst->markDirty();
 }
 
 void ChangeOscillatorDraw::doForwards() {

@@ -28,16 +28,27 @@
 
 #include <stdio.h>
 #include <vector>
+#include "SharedManagerBase.h"
 
 class Track;
 
-class Clip {
+class Clip : public SharedManagerBase {
 public:
   std::vector<Track*> tracks;
   
-  //Clip();
-  //Clip(FILE*);
-  //~Clip();
+  Clip();
+  ~Clip();
+  
+protected:
+  
+  // Don't override this function!
+  virtual void update();
+  
+  // Don't override this function!
+  virtual void harvest();
+  
+  // Don't override this function!
+  virtual void abandon();
 };
 
 #endif // CLIP_H
