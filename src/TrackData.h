@@ -23,27 +23,21 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef AUDIO_CALLBACK_H 
-#define AUDIO_CALLBACK_H 
+#ifndef TRACK_DATA_H
+#define TRACK_DATA_H
 
-#include <stdlib.h>
-#include <portaudio.h>
-#include "Instrument.h"
+class Note;
+class Instrument;
 
-/// TODO: remove this:
-extern Song* _song;
+typedef struct TrackData {
+  Instrument* instrument;
+  Note* notes;
+  int* bars;
+  int noteCount;
+  int barCount;
+  int head;
+  int tail;
+  int beatsPerBar;
+} TrackData;
 
-extern char startRecording;
-extern char stopRecording;
-extern char recordingStopped;
-extern std::vector<float> recordedSamples;
-
-void audioCallback_init();
-
-int audioCallback( const void *inputBuffer, void *outputBuffer,
-                   unsigned long framesPerBuffer,
-                   const PaStreamCallbackTimeInfo* timeInfo,
-                   PaStreamCallbackFlags statusFlags,
-                   void *userData );
-
-#endif // AUDIO_CALLBACK_H 
+#endif // TRACK_DATA_H

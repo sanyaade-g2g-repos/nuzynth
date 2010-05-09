@@ -28,28 +28,18 @@
 
 #include <stdio.h>
 #include <vector>
-#include "SharedManagerBase.h"
+#include "CloneManager.h"
+#include "TrackData.h"
 #include "Note.h"
 
 class Instrument;
 
-class Track : public SharedManagerBase {
+class Track : public CloneManager<TrackData> {
 public:
   
-  Track();
+  Track(Instrument* instrument);
   ~Track();
   
-  /// TODO: Put this in a Sharer?
-  Instrument* instrument;
-  
-  Sharer<int, true> beatsPerBar;
-  Sharer<Note*, true> noteSharer;
-  Sharer<int, true> noteCountSharer;
-  Sharer<int*, true> barSharer;
-  Sharer<int, true> barCountSharer;
-  
-  int head;
-  int tail;
   int nextID;
   
   std::vector<Note> notes;
@@ -66,16 +56,12 @@ public:
   
   int compareNotes(int index1, int index2);
   
+  void setInstrument(Instrument* inst);
+  
 protected:
   
-  // Don't override this function!
-  virtual void update();
-  
-  // Don't override this function!
-  virtual void harvest();
-  
-  // Don't override this function!
-  virtual void abandon();
+  virtual void updateClone();
+  virtual void destroyOldClone(TrackData* newClone, TrackData* oldClone);
 };
 
 #endif // TRACK_H

@@ -29,6 +29,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "random.h"
+#include "Track.h"
+#include "Instrument.h"
 
 float randomZeroCrossing(float* wave) {
   if (wave[0] == 0.0f) return 0.0f;
@@ -50,12 +52,14 @@ float randomZeroCrossing(float* wave) {
   return result;
 }
 
-void Tone_create(Tone* tone, unsigned int id, CloneManager<Modulator>* instrument, float hertz) {
+void Tone_create(Tone* tone, Track* track, int id, int note, float hertz) {
+  tone->next = 0;
   tone->id = id;
-  tone->instrument = instrument;
-  //instrument->numReferences++;
+  tone->note = note;
+  tone->firstSampleIndex = 0;
+  tone->track = track;
   
-  Modulator* mod = instrument->getClone();
+  Modulator* mod = track->currentClone->instrument->currentClone;
   tone->wavePhase = randomZeroCrossing(mod->wave);
   tone->wavePhase2 = randomZeroCrossing(mod->wave);
   //tone->wavePhase2 = fastRandom(0.0f, (float) SAMPLES_IN_WAVE);

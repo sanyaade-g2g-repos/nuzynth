@@ -35,6 +35,7 @@
 #include "keyboard.h"
 #include "Clip.h"
 #include "Track.h"
+#include "Instrument.h"
 
 
 
@@ -113,27 +114,98 @@ return res;
 // TODO: remove this stuff:
 Song* _song;
 
-#define MAX_MIDI_TONES (32)
-Tone tones[MAX_MIDI_TONES];
+#define BEATS_PER_MINUTE    (200)
+#define BEATS_PER_SECOND    ((double)BEATS_PER_MINUTE / 60.0)
+#define SAMPLES_PER_BEAT    ((double)SAMPLE_RATE / (double)BEATS_PER_SECOND)
+#define MAX_TONES (50)
+
+Tone tones[MAX_TONES + 1];
+int oldestTone;
+int newestTone;
+int nextTone;
+int totalTones;
+double nextBeatSample;
+int nextBeat;
 char startRecording = 0;
 char stopRecording = 0;
 char recordingStopped = 0;
 std::vector<float> recordedSamples;
 
 
-bool tonematrix[16][16];
-
 int count;
 int beat;
 
-int pitches[] = {42,44,46,49,51,54,56,58,61,63,66,68,70,73,75,78,};
+//int pitches[] = {42,44,46,49,51,54,56,58,61,63,66,68,70,73,75,78,};
 
 void audioCallback_init() {
-  memset(tones, 0, sizeof(Tone) * MAX_MIDI_TONES);
-  memset(tonematrix, 0, sizeof(bool) * 256);
+  memset(tones, 0, sizeof(Tone) * MAX_TONES);
+  //memset(tonematrix, 0, sizeof(bool) * 256);
   count = 0;
-  beat = 15;
+  beat = 0;
+  oldestTone = 0;
+  newestTone = 0;
+  nextTone = 1;
+  totalTones = 0;
+  nextBeatSample = 0.0;
+  nextBeat = 0;
 }
+
+int createTone (Track* track, int note) {
+  int id = track->currentClone->notes[note].id;
+  float hertz = midi_frequencyFromPitchIndex(track->currentClone->notes[note].pitch);
+  
+  
+  if (totalTones == MAX_TONES) {
+    nextTone = oldestTone;
+    oldestTone = tones[oldestTone].next;
+  } else if (totalTones == 0) {
+    oldestTone = 1;
+    nextTone = 1;
+    totalTones = 1;
+  } else {
+    while (tones[nextTone].alive) {
+      nextTone++;
+      if (nextTone > MAX_TONES) {
+        nextTone = 1;
+      }
+    }
+    totalTones++;
+  }
+  
+  
+  int tone = nextTone;
+  tones[newestTone].next = tone;
+  newestTone = tone;
+  nextTone++;
+  if (nextTone > MAX_TONES) nextTone = 1;
+  
+  Tone_create(&tones[tone], track, id, note, hertz);
+  tones[tone].next = 0;
+  
+  return tone;
+}
+
+int destroyTone (int tone, int prevTone) {
+  if (prevTone != 0) {
+    tones[prevTone].next = tones[tone].next;
+  }
+  
+  if (tone == oldestTone) {
+    oldestTone = tones[tone].next;
+  }
+  if (tone == newestTone) {
+    newestTone = prevTone;
+    if (tone == nextTone -1) {
+      nextTone = tone;
+    }
+  }
+  
+  memset(&tones[tone], 0, sizeof(Tone));
+  
+  totalTones--;
+}
+
+
 
 int audioCallback( const void *inputBuffer, void *outputBuffer,
                          unsigned long framesPerBuffer,
@@ -141,204 +213,277 @@ int audioCallback( const void *inputBuffer, void *outputBuffer,
                          PaStreamCallbackFlags statusFlags,
                          void *userData )
 {
-    (void) inputBuffer;
-    (void) timeInfo; /* Prevent unused variable warnings. */
-    (void) statusFlags;
-    (void) userData;
-    
-    /// TODO: Make sure this is thread safe:
-    Instrument* inst = _song->clips[0]->tracks[0]->instrument;
-    
-    memset(outputBuffer, 0, (sizeof(float) * 2) * framesPerBuffer);
-    
-    // port midi:
-    bool wasANote;
-    bool wasANoteStart;
-    unsigned char pitchIndex;
-    
-    while (midi_poll(&wasANote, &wasANoteStart, &pitchIndex)) {
-      if (wasANote) {
-        if (wasANoteStart) {
-          for (int i = 0; i < MAX_MIDI_TONES; i++) {
-            if (tones[i].alive == 0) {
-              Tone_create(&tones[i], pitchIndex, inst, midi_frequencyFromPitchIndex(pitchIndex));
-              break;
-            }
+  // Prevent unused variable warnings:
+  (void) inputBuffer;
+  (void) timeInfo;
+  (void) statusFlags;
+  (void) userData;
+  
+  memset(outputBuffer, 0, (sizeof(float) * 2) * framesPerBuffer);
+  float *out = (float*)outputBuffer;
+  
+  /*
+  // port midi:
+  bool wasANote;
+  bool wasANoteStart;
+  unsigned char pitchIndex;
+  
+  while (midi_poll(&wasANote, &wasANoteStart, &pitchIndex)) {
+    if (wasANote) {
+      if (wasANoteStart) {
+        for (int i = 0; i < MAX_TONES; i++) {
+          if (tones[i].alive == false) {
+            Tone_create(&tones[i], pitchIndex, inst, midi_frequencyFromPitchIndex(pitchIndex));
+            break;
           }
-        } else {
-          for (int i = 0; i < MAX_MIDI_TONES; i++) {
-            if (tones[i].id == pitchIndex) {
-              tones[i].released = 1;
-              //break;
-            }
-          }
-        }
-      }
-    }
-    
-    count++;
-    if (count == 40) {
-      count = 0;
-      
-      for (int i = 0; i < 16; i++) {
-        pitchIndex = pitches[i];
-        if (tonematrix[beat][i]) {
-          for (int j = 0; j < MAX_MIDI_TONES; j++) {
-            if (tones[j].id == pitchIndex) {
-              tones[j].released = 1;
-            }
-          }
-        }
-      }
-      
-      beat++;
-      if (beat == 16) beat = 0;
-      
-      for (int i = 0; i < 16; i++) {
-        pitchIndex = pitches[i];
-        if (tonematrix[beat][i]) {
-          for (int j = 0; j < MAX_MIDI_TONES; j++) {
-            if (tones[j].alive == 0) {
-              Tone_create(&tones[j], pitchIndex, inst, midi_frequencyFromPitchIndex(pitchIndex));
-              break;
-            }
-          }
-        }
-      }
-      
-    }
-    
-    // TODO: This iterating over key-press/release vectors is probably not thread safe!
-    std::vector<unsigned char>::iterator iter = pressedKeys.begin();
-    while (iter < pressedKeys.end()) {
-      int pitch = *iter;
-      if (pitch == 0) {
-        iter++;
-        continue;
-      }
-      bool tonematrixWasPlaying = false;
-      for (int i = 0; i < 16; i++) for (int j = 0; j < 16; j++) {
-        tonematrixWasPlaying = tonematrixWasPlaying || tonematrix[i][j];
-        tonematrix[i][j] = false;
-      }
-      if (tonematrixWasPlaying) {
-        for (int i = 0; i < MAX_MIDI_TONES; i++) {
-          tones[i].released = 1;
-        }
-      }
-      for (int i = 0; i < MAX_MIDI_TONES; i++) {
-        if (tones[i].alive == 0) {
-          Tone_create(&tones[i], *iter, inst, midi_frequencyFromPitchIndex(*iter));
-          break;
-        }
-      }
-      iter++;
-    }
-    pressedKeys.erase(pressedKeys.begin(), pressedKeys.end());
-    
-    iter = releasedKeys.begin();
-    while (iter < releasedKeys.end()) {
-      if (*iter == 0) continue;
-      for (int i = 0; i < MAX_MIDI_TONES; i++) {
-        if (tones[i].id == *iter) {
-          tones[i].released = 1;
-          //break;
-        }
-      }
-      iter++;
-    }
-    releasedKeys.erase(releasedKeys.begin(), releasedKeys.end());
-    
-    for (int i = 0; i < MAX_MIDI_TONES; i++) {
-      Tone* tone = &tones[i];
-      if (tone->alive == 0) continue;
-      
-      if (tone->instrument->isCondemned()) {
-        tone->alive = 0;
-        continue;
-      }
-      
-      float *out = (float*)outputBuffer;
-      
-      // synthesize!
-      Modulator* mod = tone->instrument->getClone();
-      
-      if (mod != 0) {
-        mod->synthFunction(tone, mod, out, framesPerBuffer);
-      }
-    }
-    
-    SharedManagerBase::markOldStuffAsUnused();
-    
-    float *out2 = (float*)outputBuffer;
-    
-    /*
-    for (int i = 0; i < framesPerBuffer * 2; i+=2) {
-      out2[i] = formant_filter(&out2[i], 0);
-      out2[i+1] = out2[i];
-    }
-    */
-    
-    for (int i = 0; i < framesPerBuffer * 2; i++) {
-      
-      // envelope limiter adapted from:
-      // http://www.musicdsp.org/showone.php?id=265
-      
-      /// old envelope limiter
-      /*
-      static float attackMs = 5;
-      static float releaseMs = 2000;
-      static float sampleRate = 44100 * 2; // 2 channels
-      static float envelope = 0;
-      static float a = pow( 0.01, 1.0 / ( attackMs * sampleRate * 0.001 ) );
-      static float r = pow( 0.01, 1.0 / ( releaseMs * sampleRate * 0.001 ) );
-      float v = fabs( *out2 ) * 1.3;
-      if ( v > envelope ) envelope = a * ( envelope - v ) + v;
-      else                envelope = r * ( envelope - v ) + v;
-      
-      //if ( envelope > 1.0f ) *out2 = *out2 / envelope;
-      if ( envelope > 0.0f ) *out2 = *out2 * 0.9f * tanh(envelope) / envelope;
-      
-      if (*out2 > 0.99999f) *out2 = 0.99999f;
-      else if (*out2 < -0.99999f) *out2 = -0.99999f;
-      */
-      
-      // new envelope limiter
-      static float releaseMs = 40000;
-      static float sampleRate = 44100 * 2; // 2 channels
-      static float envelope = 0;
-      static float r = pow( 0.01, 1.0 / ( releaseMs * sampleRate * 0.001 ) );
-      float v = fabs( *out2 );
-      if ( v > envelope ) envelope = v;
-      else                envelope = r * ( envelope - v ) + v;
-      if (envelope > 0.0f) {
-        *out2 = *out2 * (1.0f - pow(2.0f, -envelope)) / envelope;
-      }
-      
-      // Clip distortion:
-      /*
-      if (*out2 > 0.5f) *out2 = 0.5f;
-      else if (*out2 < -0.5f) *out2 = -0.5f;
-      */
-      
-      // tube distortion:
-      //out2[i] = tanh(out2[i]);
-      
-      out2++;
-    }
-    
-    if (startRecording) {
-      if (stopRecording) {
-        if (!recordingStopped) {
-          recordingStopped = 1;
         }
       } else {
-        float *out = (float*)outputBuffer;
-        int oldSize = recordedSamples.size();
-        recordedSamples.resize(oldSize + framesPerBuffer * 2);
-        memcpy(&recordedSamples[oldSize], out, sizeof(float) * framesPerBuffer * 2);
+        for (int i = 0; i < MAX_TONES; i++) {
+          if (tones[i].id == pitchIndex) {
+            tones[i].released = 1;
+            //break;
+          }
+        }
+      }
+    }
+  }
+  
+  // TODO: This iterating over key-press/release vectors is probably not thread safe!
+  std::vector<unsigned char>::iterator iter = pressedKeys.begin();
+  while (iter < pressedKeys.end()) {
+    int pitch = *iter;
+    if (pitch == 0) {
+      iter++;
+      continue;
+    }
+    bool tonematrixWasPlaying = false;
+    for (int i = 0; i < 16; i++) for (int j = 0; j < 16; j++) {
+      tonematrixWasPlaying = tonematrixWasPlaying || tonematrix[i][j];
+      tonematrix[i][j] = false;
+    }
+    if (tonematrixWasPlaying) {
+      for (int i = 0; i < MAX_TONES; i++) {
+        tones[i].released = 1;
+      }
+    }
+    for (int i = 0; i < MAX_TONES; i++) {
+      if (tones[i].alive == false) {
+        Tone_create(&tones[i], *iter, inst, midi_frequencyFromPitchIndex(*iter));
+        break;
+      }
+    }
+    iter++;
+  }
+  pressedKeys.erase(pressedKeys.begin(), pressedKeys.end());
+  
+  iter = releasedKeys.begin();
+  while (iter < releasedKeys.end()) {
+    if (*iter == 0) continue;
+    for (int i = 0; i < MAX_TONES; i++) {
+      if (tones[i].id == *iter) {
+        tones[i].released = 1;
+        //break;
+      }
+    }
+    iter++;
+  }
+  releasedKeys.erase(releasedKeys.begin(), releasedKeys.end());
+  */
+  
+  
+  // pick a clone for each CloneManager to use for the duration of the 
+  // callback so that I don't have to worry about the structure of the song
+  // changing while I'm iterating over stuff. 
+  for (int i = 0; i < _song->clips.size(); i++) {
+    Clip* clip = _song->clips[i];
+    for (int j = 0; j < clip->tracks.size(); j++) {
+      Track* track = clip->tracks[j];
+      track->updateCurrentCloneToLatest();
+      if (track->currentClone != 0) {
+        Instrument* instrument = track->currentClone->instrument;
+        if (instrument != 0) {
+          instrument->updateCurrentCloneToLatest();
+        }
+      }
+    }
+  }
+  
+  
+  int prevTone;
+  int curTone;
+  
+  prevTone = 0;
+  curTone = oldestTone;
+  while (curTone != 0) {
+    bool valid = true;
+    
+    Tone* tone = &tones[curTone];
+    
+    if (tone->alive == false ||
+        tone->track->currentClone == 0 || 
+        tone->track->currentClone->instrument == 0 || 
+        tone->track->currentClone->instrument->currentClone == 0)
+    {
+      valid = false;
+    } else {
+      Note* notes = tone->track->currentClone->notes;
+      if (notes[tone->note].on == false || 
+          notes[tone->note].id != tone->id)
+      {
+        valid = false;
+      } else if (tone->released == 0) {
+        /// TODO: Check if the note has been moved away from this callback
+        //        period. If so, mark it as invalid. Or maybe just release it?
       }
     }
     
-    return paContinue;
+    
+    if (valid) {
+      prevTone = curTone;
+      curTone = tone->next;
+    } else {
+      int temp = curTone;
+      curTone = tone->next;
+      destroyTone(temp, prevTone);
+    }
+  }
+  
+  
+  int sampleIndex = nextBeatSample;
+  while (sampleIndex < framesPerBuffer) {
+    // nextBeat occurs inside this callback duration!
+    
+    // Iterate over unreleased tones and look for NOTE_ENDS at this beat.
+    // If found, render the tone up to its end, then release the tone
+    // but don't destroy it. 
+    prevTone = 0;
+    curTone = oldestTone;
+    while (curTone != 0) {
+      Tone* tone = &tones[curTone];
+      if (tone->released == false) {
+        Note* notes = tone->track->currentClone->notes;
+        int nextJoined = notes[tone->note].nextJoined;
+        if (notes[nextJoined].beat == nextBeat && 
+            notes[nextJoined].type == NOTE_END)
+        {
+          Modulator* mod = tone->track->currentClone->instrument->currentClone;
+          mod->synthFunction(tone, mod, 
+                             &out[tone->firstSampleIndex * 2], 
+                             sampleIndex - tone->firstSampleIndex);
+          tone->firstSampleIndex = sampleIndex;
+          tone->released = 1;
+        }
+      }
+      
+      prevTone = curTone;
+      curTone = tone->next;
+    }
+    
+    /// TODO: Get the total number of beats from the Clip:
+    if (nextBeat >= 16) {
+      // We want to get the NOTE_ENDs from the end of the track, but 
+      // we want to get the NOTE_STARTs from the beginning of the track. 
+      nextBeat = 0;
+    }
+    
+    
+    /// TODO: Iterate over the tracks and look for NOTE_STARTs.
+    {
+      Track* track = _song->clips[0]->tracks[0];
+      if (track->currentClone == 0 || 
+          track->currentClone->instrument->currentClone == 0)
+      {
+        //continue;
+      } else {
+        /// TODO: Don't check every single note every single time. 
+        Note* notes = track->currentClone->notes;
+        int prevNote = 0;
+        int curNote = track->currentClone->head;
+        while (curNote != 0) {
+          if (notes[curNote].beat == nextBeat &&
+              notes[curNote].type == NOTE_START)
+          {
+            int tone = createTone(track, curNote);
+            tones[tone].firstSampleIndex = sampleIndex;
+          }
+          curNote = notes[curNote].next;
+        }
+      }
+    }
+    
+    nextBeatSample += SAMPLES_PER_BEAT;
+    sampleIndex = nextBeatSample;
+    nextBeat++;
+  }
+  nextBeatSample -= (double)framesPerBuffer;
+  
+  // Finally, render all tones that are still alive at the end of the callback:
+  prevTone = 0;
+  curTone = oldestTone;
+  while (curTone != 0) {
+    Tone* tone = &tones[curTone];
+    
+    Modulator* mod = tone->track->currentClone->instrument->currentClone;
+    mod->synthFunction(tone, mod, 
+                       &out[tone->firstSampleIndex * 2], 
+                       framesPerBuffer - tone->firstSampleIndex);
+    
+    tone->firstSampleIndex = 0;
+    
+    prevTone = curTone;
+    curTone = tone->next;
+  }
+  
+  SharedManagerBase::markOldStuffAsUnused();
+  
+  float *out2 = (float*)outputBuffer;
+  
+  /*
+  for (int i = 0; i < framesPerBuffer * 2; i+=2) {
+    out2[i] = formant_filter(&out2[i], 0);
+    out2[i+1] = out2[i];
+  }
+  */
+  
+  for (int i = 0; i < framesPerBuffer * 2; i++) {
+    
+    // envelope limiter adapted from:
+    // http://www.musicdsp.org/showone.php?id=265
+    static float releaseMs = 40000;
+    static float sampleRate = 44100 * 2; // 2 channels
+    static float envelope = 0;
+    static float r = pow( 0.01, 1.0 / ( releaseMs * sampleRate * 0.001 ) );
+    float v = fabs( *out2 );
+    if ( v > envelope ) envelope = v;
+    else                envelope = r * ( envelope - v ) + v;
+    if (envelope > 0.0f) {
+      *out2 = *out2 * (1.0f - pow(2.0f, -envelope)) / envelope;
+    }
+    
+    // Clip distortion:
+    /*
+    if (*out2 > 0.5f) *out2 = 0.5f;
+    else if (*out2 < -0.5f) *out2 = -0.5f;
+    */
+    
+    // tube distortion:
+    //out2[i] = tanh(out2[i]);
+    
+    out2++;
+  }
+  
+  if (startRecording) {
+    if (stopRecording) {
+      if (!recordingStopped) {
+        recordingStopped = 1;
+      }
+    } else {
+      float *out = (float*)outputBuffer;
+      int oldSize = recordedSamples.size();
+      recordedSamples.resize(oldSize + framesPerBuffer * 2);
+      memcpy(&recordedSamples[oldSize], out, sizeof(float) * framesPerBuffer * 2);
+    }
+  }
+  
+  return paContinue;
 }

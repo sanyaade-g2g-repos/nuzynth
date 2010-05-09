@@ -26,16 +26,21 @@
 #ifndef TONE_H
 #define TONE_H
 
-#include "Modulator.h"
-#include "CloneManager.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include "Modulator.h"
+
+class Track;
+
 typedef struct Tone {
-  unsigned int id;
-  CloneManager<Modulator>* instrument;
+  int next;
+  int id;
+  int note;
+  int firstSampleIndex;
+  Track* track;
   float wavePhase;
   float wavePhase2;
   float waveSpeed;
@@ -50,7 +55,7 @@ typedef struct Tone {
   char alive;
 } Tone;
 
-void Tone_create(Tone* tone, unsigned int id, CloneManager<Modulator>* instrument, float hertz);
+void Tone_create(Tone* tone, Track* track, int id, int note, float hertz);
 
 #ifdef __cplusplus
 }

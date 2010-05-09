@@ -24,44 +24,51 @@
  */
 
 #include "Track.h"
+#include "Instrument.h"
 
-
-Track::Track() {
+Track::Track(Instrument* instrument) {
+  original = (TrackData*) Pool_draw(clonePool());
+  memset(original, 0, sizeof(TrackData));
+  
+  setInstrument(instrument);
+  
   notes.resize(16);
   memset (&notes[0], 0, notes.size() * (sizeof(Note)));
-  
-  head = 1;
-  tail = 2;
+  original->beatsPerBar = 4;
+  original->head = 1;
+  original->tail = 2;
   emptyRuns.push_back(3);
   nextID = 1;
   
-  notes[head].prev = head;
-  notes[head].next = tail;
-  notes[head].id = INT_MAX;
-  notes[head].beat = INT_MIN;
-  notes[head].on = true;
-  notes[head].type = NOTE_DUMMY;
+  notes[original->head].prev = 0;
+  notes[original->head].next = original->tail;
+  notes[original->head].id = INT_MAX;
+  notes[original->head].beat = INT_MIN;
+  notes[original->head].on = true;
+  notes[original->head].type = NOTE_DUMMY;
   
-  notes[tail].prev = head;
-  notes[tail].next = tail;
-  notes[tail].id = INT_MAX;
-  notes[tail].beat = INT_MAX;
-  notes[tail].on = true;
-  notes[tail].type = NOTE_DUMMY;
+  notes[original->tail].prev = original->head;
+  notes[original->tail].next = 0;
+  notes[original->tail].id = INT_MAX;
+  notes[original->tail].beat = INT_MAX;
+  notes[original->tail].on = true;
+  notes[original->tail].type = NOTE_DUMMY;
   
+  /*
+  allocateNotePair(0, 5, 56);
+  allocateNotePair(8, 13, 58);
+  allocateNotePair(6, 7, 61);
+  allocateNotePair(14, 15, 63);
+  */
   
-  allocateNotePair(0, 10, 1);
-  allocateNotePair(10, 20, 2);
-  allocateNotePair(5, 10, 3);
+  allocateNotePair(0, 13, 56);
+  allocateNotePair(3, 14, 58);
+  allocateNotePair(6, 15, 61);
+  allocateNotePair(9, 16, 63);
   
-  freeNoteLine(5);
-  notes[3].beat = 6;
-  sortNote(3);
-  
-  allocateNotePair(0, 6, 4);
-  
-  for (int i = 0; i < 9; i++) {
-    printf("NOTE: %d %d %d %d %d %d %d %d %s\n",
+  for (int i = 0; i < 12; i++) {
+    printf("(NOTE) index: %d, neighbors: (%d, %d), joined: (%d, %d), type: %d, id: %d, beat: %d, pitch: %d, %s\n",
+           i, 
            notes[i].prev, 
            notes[i].next, 
            notes[i].prevJoined, 
@@ -78,9 +85,13 @@ Track::Track() {
   }
   
   printf("notecount %d\n", notes.size());
+  
+  update();
 }
 
-Track::~Track() {}
+Track::~Track() {
+  Pool_return(clonePool(), original);
+}
 
 int Track::allocateNote(int id) {
   markDirty();
@@ -209,7 +220,7 @@ void Track::sortNote(int index, bool spliceOut) {
     notes[notes[index].next].prev = notes[index].prev;
     iter = notes[index].prev;
   } else {
-    iter = head;
+    iter = original->head;
   }
   
   if (compareNotes(index, iter) < 0) {
@@ -267,30 +278,24 @@ int Track::compareNotes(int index1, int index2) {
   }
 }
 
-void Track::update() {
+void Track::setInstrument(Instrument* inst) {
+  markDirty();
+  original->instrument = inst;
+}
+
+void Track::updateClone() {
   //beatsPerBarSharer.write();
   
-  
-  /// TODO: Figure out a threadsafe way to share the notes. I think I'll need
-  ///       the clones after all...
-  asdf
-  
-  Note* oldNotes = noteSharer.read()
-  if (oldNotes != 0) {
-    free(oldNotes);
-  }
-  
-  
-  noteSharer.write(notes.size());
-  noteCountSharer.write(notes.size());
-  //barSharer.write();
-  barCountSharer.write(bars.size());
+  // allocate new buffers!
+  original->notes = (Note*) malloc(sizeof(Note) * notes.size());
+  memcpy(original->notes, &notes[0], sizeof(Note) * notes.size());
+  original->bars = (int*) malloc(sizeof(int) * bars.size());
+  memcpy(original->bars, &bars[0], sizeof(int) * bars.size());
+  original->noteCount = notes.size();
+  original->barCount = bars.size();
 }
 
-void Track::harvest() {
-  
-}
-
-void Track::abandon() {
-  
+void Track::destroyOldClone(TrackData* newClone, TrackData* oldClone) {
+  free(oldClone->notes);
+  free(oldClone->bars);
 }

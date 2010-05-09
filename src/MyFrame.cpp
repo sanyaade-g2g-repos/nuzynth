@@ -211,10 +211,9 @@ void MyFrame::OnOpen(wxCommandEvent& WXUNUSED(event)) {
       FILE* file = fopen(filepath, "r");
       Instrument* inst = new Instrument(_song, file);
       fclose(file);
-      Instrument* temp = _song->clips[0]->tracks[0]->instrument;
+      Instrument* temp = _song->clips[0]->tracks[0]->original->instrument;
       
-      /// TODO: Make sure the following line is thread safe:
-      _song->clips[0]->tracks[0]->instrument = inst;
+      _song->clips[0]->tracks[0]->setInstrument(inst);
       
       setInstrument(inst);
       temp->prepareToDie();

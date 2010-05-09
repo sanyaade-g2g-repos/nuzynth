@@ -35,13 +35,30 @@
 template <class Clone>
 class CloneManager : public SharedManagerBase {
 public:
-  CloneManager(): SharedManagerBase(), original(0), oldClones(0) {}
+  CloneManager(): SharedManagerBase(), original(0), currentClone(0), oldClones(0) {}
   virtual ~CloneManager() {}
   
+  // You make directly modify the original in the main thread. You may 
+  // not refer to it at all in the audio thread. 
   Clone* original;
   
-  Clone* getClone() {
+  // The audio thread picks one clone and assigns it to currentClone for the
+  // duration of the audio callback. The main thread may disregard this. 
+  Clone* currentClone;
+  
+  Clone* getLatestClone() {
     return sharer.read();
+  }
+  
+  // The audio thread uses this to pick the latest clone at 
+  // the start of each callback and assign it to currentClone for the duration
+  // of the callback. 
+  void updateCurrentCloneToLatest() {
+    if (isCondemned()) {
+      currentClone = 0;
+    } else {
+      currentClone = getLatestClone();
+    }
   }
   
 protected:
@@ -60,7 +77,7 @@ protected:
     
     // Create a clone and share it:
     publishClone();
-    Clone* newClone = getClone();
+    Clone* newClone = getLatestClone();
     
     // Now add this clone to the list of old clones so that
     // we can destroy it later. 
@@ -108,7 +125,7 @@ protected:
   
   // Don't override this function!
   virtual void abandon() {
-    /// TODO: Use this to abandon the one remaining clone. 
+    /// TODO: Use this to abandon the one remaining clone, and the "original". 
   }
   
   static Pool* clonePool() {

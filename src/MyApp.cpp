@@ -65,8 +65,7 @@ bool MyApp::OnInit()
     /// TODO: clean this up:
     _song = new Song();
     _song->clips.push_back(new Clip());
-    _song->clips[0]->tracks.push_back(new Track());
-    _song->clips[0]->tracks[0]->instrument = new Instrument(_song);
+    _song->clips[0]->tracks.push_back(new Track(new Instrument(_song)));
     
     keyboard_init();
     audioCallback_init();
@@ -80,7 +79,7 @@ bool MyApp::OnInit()
     // create the main application window
     frame = new MyFrame(_T("Nuzynth"));
     
-    frame->setInstrument(_song->clips[0]->tracks[0]->instrument);
+    frame->setInstrument(_song->clips[0]->tracks[0]->original->instrument);
 
     // and show it (the frames, unlike simple controls, are not shown when
     // created initially)

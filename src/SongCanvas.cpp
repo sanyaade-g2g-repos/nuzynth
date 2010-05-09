@@ -77,7 +77,7 @@ void SongCanvas::OnPaint( wxPaintEvent& WXUNUSED(event) ) {
   GLfloat data[8];
   glVertexPointer( 2, GL_FLOAT, 0, data );
   
-  
+  /*
   for (int x = 0; x < 16; x++) {
     for (int y = 0; y < 16; y++) {
       if (tonematrix[x][y]) {
@@ -103,6 +103,7 @@ void SongCanvas::OnPaint( wxPaintEvent& WXUNUSED(event) ) {
       glDrawArrays(GL_QUADS, 0, 8);
     }
   }
+  */
   
   glFlush();
   SwapBuffers();
@@ -135,6 +136,7 @@ void SongCanvas::OnLeftMouseDown(wxMouseEvent& event) {
     CaptureMouse();
   }
   
+  /*
   int w, h;
   GetClientSize(&w, &h);
   
@@ -150,6 +152,7 @@ void SongCanvas::OnLeftMouseDown(wxMouseEvent& event) {
   fill = !tonematrix[x][y];
   
   OnMouseMove(event);
+  */
   
   //Refresh();
   //event.Skip();
@@ -165,6 +168,8 @@ void SongCanvas::OnMouseMove(wxMouseEvent& event) {
     event.Skip();
     return;
   }
+  
+  /*
   int w, h;
   GetClientSize(&w, &h);
   
@@ -180,5 +185,7 @@ void SongCanvas::OnMouseMove(wxMouseEvent& event) {
   tonematrix[x][y] = fill;
   
   Refresh();
+  */
+  
   //event.Skip();
 }

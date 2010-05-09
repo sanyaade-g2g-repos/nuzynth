@@ -120,7 +120,6 @@ OPTION_CONSTANT,
 Instrument::Instrument(Song* song) {
   this->song = song;
   setDefaultValues();
-  updateWave();
   update();
 }
 
@@ -232,7 +231,6 @@ Instrument::Instrument(Song* song, FILE* file) {
   }
   
   NoiseSpectrum_updateAll(&oscillator.noise);
-  updateWave();
   update();
 }
 
@@ -256,7 +254,9 @@ void Instrument::readCommaSeparatedChars(unsigned char* dest, int maxCount, cons
   }
 }
 
-Instrument::~Instrument() {}
+Instrument::~Instrument() {
+  Pool_return(clonePool(), original);
+}
 
 void Instrument::setDefaultValues() {
   original = (Modulator*) Pool_draw(clonePool());
@@ -405,9 +405,8 @@ void Instrument::destroyOldClone(Modulator* newClone, Modulator* oldClone) {
 void Instrument::updateWave()
 {
   float* wave = original->wave;
-  markDirty();
-  //wave = (float*) fftwf_malloc(sizeof(float) * SAMPLES_IN_WAVE);
   
+  //wave = (float*) fftwf_malloc(sizeof(float) * SAMPLES_IN_WAVE);
   wave = (float*) Pool_draw(wavePool());
   
   Oscillator_renderWave(&oscillator, wave);
