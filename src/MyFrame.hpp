@@ -30,9 +30,9 @@
 #include <wx/spinctrl.h>
 #include <wx/bookctrl.h>
 #include <wx/choice.h>
-#include "OscillatorPanel.h"
-#include "SongCanvas.h"
-#include "TimelinePanel.h"
+#include "OscillatorPanel.hpp"
+#include "SongCanvas.hpp"
+#include "TimelinePanel.hpp"
 
 // Define a new frame type: this is going to be our main frame
 class MyFrame : public wxFrame {

@@ -23,18 +23,17 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "MyFrame.h"
-#include "Modulator.h"
-
 #include <stdio.h>
 
-#include "Monitor.h"
-#include "audiocallback.h"
-#include "midi.h"
+#include "MyFrame.hpp"
+#include "Modulator.h"
+#include "Monitor.hpp"
+#include "audiocallback.hpp"
+#include "midi.hpp"
 #include "Tone.h"
-#include "WheelCatcher.h"
-#include "Clip.h"
-#include "Track.h"
+#include "WheelCatcher.hpp"
+#include "Clip.hpp"
+#include "Track.hpp"
 
 
 

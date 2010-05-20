@@ -23,23 +23,22 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef CHANGE_TIMELINE_SPEED_H
-#define CHANGE_TIMELINE_SPEED_H
+#ifndef POOL_H
+#define POOL_H
 
-#include "Change.h"
-#include "Instrument.h"
+#include "SinglyLinkedList.hpp"
 
-class ChangeTimelineSpeed : public Change {
-public:
-  ChangeTimelineSpeed(Instrument* inst, char timeline, unsigned char value);
-  virtual ~ChangeTimelineSpeed();
-protected:
-  virtual void doForwards();
-  virtual void doBackwards();
-  Instrument* inst;
-  char timeline;
-  unsigned char before;
-  unsigned char after;
+struct Pool {
+  size_t size;
+  bool align32;
+  int increment;
+  SinglyLinkedList* list;
 };
 
-#endif // CHANGE_TIMELINE_SPEED_H
+void Pool_init(Pool* pool, size_t size, bool align32);
+
+void* Pool_draw(Pool* pool);
+
+void Pool_return(Pool* pool, void* item);
+
+#endif // POOL_H

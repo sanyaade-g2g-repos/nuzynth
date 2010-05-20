@@ -23,9 +23,9 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "EffectPanel.h"
-#include "Monitor.h"
-#include "SharedManagerBase.h"
+#include "EffectPanel.hpp"
+#include "Monitor.hpp"
+#include "SharedManagerBase.hpp"
 
 BEGIN_EVENT_TABLE(EffectPanel, wxPanel)
   EVT_COMMAND_SCROLL_THUMBTRACK (DEPTH_SLIDER, EffectPanel::OnSliderUpdate)

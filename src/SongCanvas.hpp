@@ -23,27 +23,38 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef AUDIO_CALLBACK_H 
-#define AUDIO_CALLBACK_H 
+#ifndef SONG_CANVAS_H
+#define SONG_CANVAS_H
 
-#include <stdlib.h>
-#include <portaudio.h>
-#include "Instrument.h"
+#include "wx/wx.h"
+#if !wxUSE_GLCANVAS
+  #error "OpenGL required: set wxUSE_GLCANVAS to 1 and rebuild the library"
+#endif
+#include "wx/glcanvas.h"
 
-/// TODO: remove this:
-extern Song* _song;
+#include "audioCallback.hpp"
 
-extern char startRecording;
-extern char stopRecording;
-extern char recordingStopped;
-extern std::vector<float> recordedSamples;
+class SongCanvas: public wxGLCanvas
+{
+public:
+  SongCanvas( wxWindow *parent, wxWindowID id = wxID_ANY,
+                const wxPoint& pos = wxDefaultPosition,
+                const wxSize& size = wxDefaultSize,
+                long style = 0, const wxString& name = _T("SongCanvas") );
 
-void audioCallback_init();
+  ~SongCanvas();
+  
+private:
+  void OnPaint(wxPaintEvent& event);
+  void OnSize(wxSizeEvent& event);
+  void OnEraseBackground(wxEraseEvent& event);
+  void OnLeftMouseDown(wxMouseEvent& event);
+  void OnLeftMouseUp(wxMouseEvent& event);
+  void OnMouseMove(wxMouseEvent& event);
+  
+  bool fill;
+  
+DECLARE_EVENT_TABLE()
+};
 
-int audioCallback( const void *inputBuffer, void *outputBuffer,
-                   unsigned long framesPerBuffer,
-                   const PaStreamCallbackTimeInfo* timeInfo,
-                   PaStreamCallbackFlags statusFlags,
-                   void *userData );
-
-#endif // AUDIO_CALLBACK_H 
+#endif // SONG_CANVAS_H

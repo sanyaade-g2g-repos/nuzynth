@@ -24,7 +24,7 @@
  */
 
 #include <memory.h>
-#include "ChangeInstrumentCreate.h"
+#include "ChangeInstrumentCreate.hpp"
 
 /// TODO: Finish this, but not until the song has tracks to assign the instrument to. 
 

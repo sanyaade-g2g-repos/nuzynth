@@ -30,13 +30,13 @@
 #include <vector>
 #include <map>
 #include <wx/wx.h>
-#include "CloneManager.h"
+#include "CloneManager.hpp"
 #include "Modulator.h"
-#include "Oscillator.h"
-#include "Effect.h"
-#include "SinglyLinkedList.h"
-#include "Pool.h"
-#include "Song.h"
+#include "Oscillator.hpp"
+#include "Effect.hpp"
+#include "SinglyLinkedList.hpp"
+#include "Pool.hpp"
+#include "Song.hpp"
 
 extern const char* effectNames[NUM_EFFECT_TYPES];
 extern const wxString effectChoices[NUM_EFFECT_TYPES + 1];

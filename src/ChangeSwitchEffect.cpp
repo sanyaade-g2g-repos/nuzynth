@@ -24,7 +24,7 @@
  */
 
 #include <memory.h>
-#include "ChangeSwitchEffect.h"
+#include "ChangeSwitchEffect.hpp"
 
 
 ChangeSwitchEffect::ChangeSwitchEffect(Instrument* inst, char timeline, char before, char after)

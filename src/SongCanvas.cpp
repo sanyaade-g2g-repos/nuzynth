@@ -27,7 +27,7 @@
 #include <math.h>
 #include <limits>
 
-#include "SongCanvas.h"
+#include "SongCanvas.hpp"
 
 BEGIN_EVENT_TABLE(SongCanvas, wxGLCanvas)
   EVT_SIZE(SongCanvas::OnSize)

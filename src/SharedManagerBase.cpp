@@ -23,7 +23,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "SharedManagerBase.h"
+#include "SharedManagerBase.hpp"
 #include "memoryBarrier.h"
 
 std::vector<SharedManagerBase*> SharedManagerBase::dirtyManagers;

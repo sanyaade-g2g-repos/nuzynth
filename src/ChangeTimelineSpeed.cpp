@@ -24,7 +24,7 @@
  */
 
 #include <memory.h>
-#include "ChangeTimelineSpeed.h"
+#include "ChangeTimelineSpeed.hpp"
 
 
 ChangeTimelineSpeed::ChangeTimelineSpeed(Instrument* inst, char timeline, unsigned char value)

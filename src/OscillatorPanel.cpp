@@ -25,10 +25,10 @@
 
 #include <stdio.h>
 
-#include "MyFrame.h"
-#include "Monitor.h"
-#include "OscillatorPanel.h"
-#include "WheelCatcher.h"
+#include "MyFrame.hpp"
+#include "Monitor.hpp"
+#include "OscillatorPanel.hpp"
+#include "WheelCatcher.hpp"
 
 BEGIN_EVENT_TABLE(OscillatorPanel, wxPanel)
   EVT_CHOICE         (VOICE_CHOICE,   OscillatorPanel::OnChoiceUpdate)

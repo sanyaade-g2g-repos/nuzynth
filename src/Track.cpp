@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "Track.h"
-#include "Instrument.h"
+#include "Track.hpp"
+#include "Instrument.hpp"
 
 Track::Track(Instrument* instrument) {
   original = (TrackData*) Pool_draw(clonePool());

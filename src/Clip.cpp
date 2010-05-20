@@ -23,7 +23,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "Clip.h"
+#include "Clip.hpp"
 
 
 Clip::Clip() {

@@ -24,7 +24,7 @@
  */
 
 #include <memory.h>
-#include "ChangeEffectCreate.h"
+#include "ChangeEffectCreate.hpp"
 
 
 ChangeEffectCreate::ChangeEffectCreate(Instrument* inst, char timeline, char type)

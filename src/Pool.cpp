@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
-#include "Pool.h"
+#include "Pool.hpp"
 
 void private_allocate(Pool* pool) {
   printf("Allocating new buffers of size %d\n", pool->size);
