@@ -23,22 +23,23 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef POOL_H
-#define POOL_H
+#ifndef CHANGE_SWITCH_EFFECT_H 
+#define CHANGE_SWITCH_EFFECT_H 
 
-#include "SinglyLinkedList.h"
+#include "Change.hpp"
+#include "Instrument.hpp"
 
-struct Pool {
-  size_t size;
-  bool align32;
-  int increment;
-  SinglyLinkedList* list;
+class ChangeSwitchEffect : public Change {
+public:
+  ChangeSwitchEffect(Instrument* inst, char timeline, char before, char after);
+  virtual ~ChangeSwitchEffect();
+protected:
+  virtual void doForwards();
+  virtual void doBackwards();
+  Instrument* inst;
+  char timeline;
+  char before;
+  char after;
 };
 
-void Pool_init(Pool* pool, size_t size, bool align32);
-
-void* Pool_draw(Pool* pool);
-
-void Pool_return(Pool* pool, void* item);
-
-#endif // POOL_H
+#endif // CHANGE_SWITCH_EFFECT_H 

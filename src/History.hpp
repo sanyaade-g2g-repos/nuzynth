@@ -23,38 +23,22 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef SONG_CANVAS_H
-#define SONG_CANVAS_H
+#ifndef HISTORY_H 
+#define HISTORY_H 
 
-#include "wx/wx.h"
-#if !wxUSE_GLCANVAS
-  #error "OpenGL required: set wxUSE_GLCANVAS to 1 and rebuild the library"
-#endif
-#include "wx/glcanvas.h"
+#include <vector>
+#include "Change.hpp"
 
-#include "audioCallback.h"
-
-class SongCanvas: public wxGLCanvas
-{
+class History {
 public:
-  SongCanvas( wxWindow *parent, wxWindowID id = wxID_ANY,
-                const wxPoint& pos = wxDefaultPosition,
-                const wxSize& size = wxDefaultSize,
-                long style = 0, const wxString& name = _T("SongCanvas") );
-
-  ~SongCanvas();
-  
+  History();
+  ~History();
+  void record(Change* change);
+  void undo();
+  void redo();
 private:
-  void OnPaint(wxPaintEvent& event);
-  void OnSize(wxSizeEvent& event);
-  void OnEraseBackground(wxEraseEvent& event);
-  void OnLeftMouseDown(wxMouseEvent& event);
-  void OnLeftMouseUp(wxMouseEvent& event);
-  void OnMouseMove(wxMouseEvent& event);
-  
-  bool fill;
-  
-DECLARE_EVENT_TABLE()
+  std::vector<Change*> changes;
+  int index;
 };
 
-#endif // SONG_CANVAS_H
+#endif // HISTORY_H 

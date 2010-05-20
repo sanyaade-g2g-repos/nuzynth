@@ -23,23 +23,24 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef CHANGE_SWITCH_EFFECT_H 
-#define CHANGE_SWITCH_EFFECT_H 
+#ifndef CHANGE_EFFECT_DEPTH_H
+#define CHANGE_EFFECT_DEPTH_H
 
-#include "Change.h"
-#include "Instrument.h"
+#include "Change.hpp"
+#include "Instrument.hpp"
 
-class ChangeSwitchEffect : public Change {
+class ChangeEffectDepth : public Change {
 public:
-  ChangeSwitchEffect(Instrument* inst, char timeline, char before, char after);
-  virtual ~ChangeSwitchEffect();
+  ChangeEffectDepth(Instrument* inst, char timeline, char type, unsigned char value);
+  virtual ~ChangeEffectDepth();
 protected:
   virtual void doForwards();
   virtual void doBackwards();
   Instrument* inst;
   char timeline;
-  char before;
-  char after;
+  char type;
+  unsigned char before;
+  unsigned char after;
 };
 
-#endif // CHANGE_SWITCH_EFFECT_H 
+#endif // CHANGE_EFFECT_DEPTH_H

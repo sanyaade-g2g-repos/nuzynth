@@ -28,8 +28,8 @@
 
 #include <wx/wx.h>
 
-#include "Instrument.h"
-#include "ChangeOscillatorDraw.h"
+#include "Instrument.hpp"
+#include "ChangeOscillatorDraw.hpp"
 
 class OscillatorCanvas: public wxWindow
 {

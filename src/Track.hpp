@@ -23,38 +23,45 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef MONITOR_H 
-#define MONITOR_H 
+#ifndef TRACK_H
+#define TRACK_H
 
-#include "Callback.h"
-#include <map>
-#include <list>
+#include <stdio.h>
+#include <vector>
+#include "CloneManager.hpp"
+#include "TrackData.hpp"
+#include "Note.hpp"
 
-class Monitor {
-private:
-  static std::map<void*, Monitor*> monitors;
-  std::list<CallbackBase*> callbacks;
-  
-  //static std::list<Monitor*> dirtyList;
-  //bool dirty;
-  
-  static void addCallbackInternal(void* prop, CallbackBase* callback);
-  static void setPropertyInternal(void* prop);
-  
+class Instrument;
+
+class Track : public CloneManager<TrackData> {
 public:
   
-  template<class Value, class Listener>
-  static void addCallback(Value* prop, Callback<Value, Listener>* callback) {
-    addCallbackInternal((void*) prop, callback);
-  }
+  Track(Instrument* instrument);
+  ~Track();
   
-  static void removeCallback(void* prop, void* thisptr);
+  int nextID;
   
-  template <class Value>
-  static void setProperty(Value* prop, const Value& val) {
-    *prop = val;
-    setPropertyInternal( (void*)prop );
-  }
+  std::vector<Note> notes;
+  std::vector<int> bars;
+  std::vector<int> emptyRuns;
+  
+  int allocateNote(int id);
+  int allocateNotePair(int start, int end, int pitch);
+  
+  void freeNote(int index);
+  void freeNoteLine(int beginning);
+  
+  void sortNote(int index, bool spliceOut = true);
+  
+  int compareNotes(int index1, int index2);
+  
+  void setInstrument(Instrument* inst);
+  
+protected:
+  
+  virtual void updateClone();
+  virtual void destroyOldClone(TrackData* newClone, TrackData* oldClone);
 };
 
-#endif // MONITOR_H 
+#endif // TRACK_H

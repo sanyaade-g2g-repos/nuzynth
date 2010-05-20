@@ -23,7 +23,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "WheelCatcher.h"
+#include "WheelCatcher.hpp"
 
 BEGIN_EVENT_TABLE(WheelCatcher, wxEvtHandler)
   EVT_MOUSEWHEEL(WheelCatcher::OnMouseWheel)

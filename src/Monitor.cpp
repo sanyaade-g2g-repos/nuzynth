@@ -24,7 +24,7 @@
  */
 
 #include <stdlib.h>
-#include "Monitor.h"
+#include "Monitor.hpp"
 
 std::map<void*, Monitor*> Monitor::monitors;
 

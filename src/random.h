@@ -29,6 +29,10 @@
 #include <stdlib.h>
 #include <time.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 static inline void random_time_seed() {srand(time(0));}
 
@@ -41,5 +45,9 @@ static inline float fastRandom(float low, float high) {
   seed=(214013*seed+2531011);
   return low + ((high-low)*(((float) ((seed>>16)&0x7FFF)) / ((float) 0x7FFF)));
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // RANDOM_H

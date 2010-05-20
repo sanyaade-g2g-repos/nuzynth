@@ -26,8 +26,8 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "EffectCanvas.h"
-#include "Monitor.h"
+#include "EffectCanvas.hpp"
+#include "Monitor.hpp"
 
 BEGIN_EVENT_TABLE(EffectCanvas, wxWindow)
   EVT_PAINT(EffectCanvas::OnPaint)

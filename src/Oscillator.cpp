@@ -23,11 +23,11 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "Oscillator.h"
-#include "math.h"
+#include <math.h>
+#include "Oscillator.hpp"
 #include "random.h"
-#include "Instrument.h"
-#include "Pool.h"
+#include "Instrument.hpp"
+#include "Pool.hpp"
 
 fftwf_complex angles[SAMPLES_IN_WAVE >> 1];
 fftwf_complex* spectrum;

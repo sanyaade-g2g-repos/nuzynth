@@ -26,8 +26,8 @@
 #include <math.h>
 //#include <assert.h>
 
-#include "midi.h"
-#include "keyboard.h"
+#include "midi.hpp"
+#include "keyboard.hpp"
 
 /*
 PmStream* midi;

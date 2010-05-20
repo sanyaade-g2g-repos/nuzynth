@@ -27,10 +27,10 @@
 #define CLONE_MANAGER_H
 
 #include <vector>
-#include "Pool.h"
-#include "SharedManagerBase.h"
-#include "Sharer.h"
-#include "SinglyLinkedList.h"
+#include "Pool.hpp"
+#include "SharedManagerBase.hpp"
+#include "Sharer.hpp"
+#include "SinglyLinkedList.hpp"
 
 template <class Clone>
 class CloneManager : public SharedManagerBase {

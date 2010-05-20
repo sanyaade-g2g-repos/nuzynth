@@ -24,7 +24,7 @@
  */
 
 #include <memory.h>
-#include "ChangeEffectDepth.h"
+#include "ChangeEffectDepth.hpp"
 
 
 ChangeEffectDepth::ChangeEffectDepth(Instrument* inst, char timeline, char type, unsigned char value)
