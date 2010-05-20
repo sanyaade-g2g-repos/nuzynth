@@ -23,38 +23,22 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef MONITOR_H 
-#define MONITOR_H 
+#ifndef HISTORY_H 
+#define HISTORY_H 
 
-#include "Callback.hpp"
-#include <map>
-#include <list>
+#include <vector>
+#include "Change.h"
 
-class Monitor {
-private:
-  static std::map<void*, Monitor*> monitors;
-  std::list<CallbackBase*> callbacks;
-  
-  //static std::list<Monitor*> dirtyList;
-  //bool dirty;
-  
-  static void addCallbackInternal(void* prop, CallbackBase* callback);
-  static void setPropertyInternal(void* prop);
-  
+class History {
 public:
-  
-  template<class Value, class Listener>
-  static void addCallback(Value* prop, Callback<Value, Listener>* callback) {
-    addCallbackInternal((void*) prop, callback);
-  }
-  
-  static void removeCallback(void* prop, void* thisptr);
-  
-  template <class Value>
-  static void setProperty(Value* prop, const Value& val) {
-    *prop = val;
-    setPropertyInternal( (void*)prop );
-  }
+  History();
+  ~History();
+  void record(Change* change);
+  void undo();
+  void redo();
+private:
+  std::vector<Change*> changes;
+  int index;
 };
 
-#endif // MONITOR_H 
+#endif // HISTORY_H 

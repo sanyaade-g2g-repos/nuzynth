@@ -28,12 +28,12 @@
 
 #include <wx/wx.h>
 #include <wx/choice.h>
-#include "EffectCanvas.hpp"
-#include "Instrument.hpp"
-#include "TimelinePanel.hpp"
-#include "ChangeEffectCreate.hpp"
-#include "ChangeSwitchEffect.hpp"
-#include "ChangeEffectDepth.hpp"
+#include "EffectCanvas.h"
+#include "Instrument.h"
+#include "TimelinePanel.h"
+#include "ChangeEffectCreate.h"
+#include "ChangeSwitchEffect.h"
+#include "ChangeEffectDepth.h"
 
 // Define a new frame type: this is going to be our main frame
 class EffectPanel : public wxPanel {

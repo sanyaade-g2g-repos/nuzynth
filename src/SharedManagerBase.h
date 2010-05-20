@@ -23,32 +23,52 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef CLIP_H
-#define CLIP_H
+#ifndef SHARED_MANAGER_BASE_H
+#define SHARED_MANAGER_BASE_H
 
 #include <stdio.h>
 #include <vector>
-#include "SharedManagerBase.hpp"
+#include "Sharer.h"
 
-class Track;
-
-class Clip : public SharedManagerBase {
+class SharedManagerBase {
 public:
-  std::vector<Track*> tracks;
   
-  Clip();
-  ~Clip();
+  // To be called frequently to share data and destroy old data:
+  static void share();
+  
+  // To be called to indicate that no threads are using any of the 
+  // outdated clones or abandoned  anymore. 
+  static void markOldStuffAsUnused();
+  
+  
+  SharedManagerBase();
+  virtual ~SharedManagerBase();
+  
+  // Indicate that the manager's data should be cloned and shared
+  // next time updateClones() is called. 
+  void markDirty();
+  
+  // Indicate that the manager is scheduled to be deleted as soon as all
+  // threads stop using it:
+  void condemn();
+  
+  bool isCondemned();
   
 protected:
+  virtual void update() = 0;
+  virtual void harvest() = 0;
+  virtual void abandon() = 0;
   
-  // Don't override this function!
-  virtual void update();
+private:
+  bool dirty;
+  unsigned int clonedIndex;
+  unsigned int condemnedIndex;
   
-  // Don't override this function!
-  virtual void harvest();
-  
-  // Don't override this function!
-  virtual void abandon();
+  static std::vector<SharedManagerBase*> dirtyManagers;
+  static std::vector<SharedManagerBase*> bloatedManagers;
+  static std::vector<SharedManagerBase*> condemnedManagers;
+  static Sharer<unsigned int, true> writeSharedSyncIndex;
+  static Sharer<unsigned int, false> readSharedSyncIndex;
 };
 
-#endif // CLIP_H
+#endif // SHARED_MANAGER_BASE_H

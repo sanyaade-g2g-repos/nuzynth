@@ -23,58 +23,24 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef CHANGE_AGGREGATE_H 
-#define CHANGE_AGGREGATE_H 
+#ifndef CHANGE_OSCILLATOR_SLIDER_H 
+#define CHANGE_OSCILLATOR_SLIDER_H 
 
-#include "Change.hpp"
+#include "Change.h"
+#include "Instrument.h"
 
-class ChangeAggregate {
+class ChangeOscillatorSlider : public Change {
 public:
-  ChangeAggregate();
-  ~ChangeAggregate();
-  void appendChange(Change* change);
+  ChangeOscillatorSlider(Instrument* inst, unsigned char* address, unsigned char newValue);
+  virtual ~ChangeOscillatorSlider();
+  void update(unsigned char newValue);
 protected:
   virtual void doForwards();
   virtual void doBackwards();
-  std::vector<Change*> changes;
+  Instrument* inst;
+  unsigned char* address;
+  unsigned char before;
+  unsigned char after;
 };
 
-#endif // CHANGE_AGGREGATE_H 
-
-
-
-
-package {
-	public class AggregateChange extends Change {
-		private const changes: Vector.<Change> = new Vector.<Change>();
-		public function AggregateChange() {
-			super(false);
-			didAnything = false;
-		}
-		
-		public final function append(change: Change): void {
-			if (change.didNothing) return;
-			changes[changes.length] = change;
-			didAnything = true;
-		}
-		
-		// WARNING: prepend is almost always a bad idea. Know what you're doing.
-		protected final function prepend(change: Change): void {
-			if (change.didNothing) return;
-			changes.splice(0,0,change);
-			didAnything = true;
-		}
-		
-		protected override final function doForwards(): void {
-			for (var i: int = 0; i < changes.length; i++) {
-				changes[i].redo();
-			}
-		}
-		
-		protected override final function doBackwards(): void {
-			for (var i: int = changes.length-1; i >= 0 ; i--) {
-				changes[i].undo();
-			}
-		}
-	}
-}
+#endif // CHANGE_OSCILLATOR_SLIDER_H 

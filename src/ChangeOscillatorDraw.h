@@ -23,28 +23,28 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef CHANGE_EFFECT_DRAW_H
-#define CHANGE_EFFECT_DRAW_H
+#ifndef CHANGE_OSCILLATOR_DRAW_H 
+#define CHANGE_OSCILLATOR_DRAW_H 
 
-#include "Change.hpp"
-#include "Instrument.hpp"
+#include "Change.h"
+#include "Instrument.h"
 
-class ChangeEffectDraw : public Change {
+class ChangeOscillatorDraw : public Change {
 public:
-  ChangeEffectDraw(Instrument* inst, char timeline, char type);
-  virtual ~ChangeEffectDraw();
+  ChangeOscillatorDraw(Instrument* inst, unsigned char* address, int size, bool noise);
+  virtual ~ChangeOscillatorDraw();
   void update(int prevIndex, int nextIndex, float value);
 protected:
+  virtual void swap();
   virtual void doForwards();
   virtual void doBackwards();
   Instrument* inst;
-  char timeline;
-  char type;
-  unsigned char* before;
-  unsigned char* after;
+  unsigned char* address;
+  unsigned char* buffer;
+  int size;
+  bool noise;
   int lowestIndex;
   int highestIndex;
-  int prevIndex;
 };
 
-#endif // CHANGE_EFFECT_DRAW_H
+#endif // CHANGE_OSCILLATOR_DRAW_H 

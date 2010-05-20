@@ -23,22 +23,28 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef OSCILLATOR_H
-#define OSCILLATOR_H
+#ifndef CHANGE_EFFECT_DRAW_H
+#define CHANGE_EFFECT_DRAW_H
 
-#include <fftw3.h>
-#include "Modulator.h"
-#include "HarmonicSet.hpp"
-#include "NoiseSpectrum.hpp"
+#include "Change.h"
+#include "Instrument.h"
 
-
-struct Oscillator {
-  HarmonicSet harmonicSet[NUM_VOICES];
-  NoiseSpectrum noise;
-  bool dirty;
+class ChangeEffectDraw : public Change {
+public:
+  ChangeEffectDraw(Instrument* inst, char timeline, char type);
+  virtual ~ChangeEffectDraw();
+  void update(int prevIndex, int nextIndex, float value);
+protected:
+  virtual void doForwards();
+  virtual void doBackwards();
+  Instrument* inst;
+  char timeline;
+  char type;
+  unsigned char* before;
+  unsigned char* after;
+  int lowestIndex;
+  int highestIndex;
+  int prevIndex;
 };
 
-void Oscillator_init(Oscillator* oscillator);
-void Oscillator_renderWave(Oscillator* oscillator, float* wave);
-
-#endif // OSCILLATOR_H
+#endif // CHANGE_EFFECT_DRAW_H

@@ -23,27 +23,24 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef AUDIO_CALLBACK_H 
-#define AUDIO_CALLBACK_H 
+#ifndef CHANGE_EFFECT_CREATE_H
+#define CHANGE_EFFECT_CREATE_H
 
-#include <stdlib.h>
-#include <portaudio.h>
-#include "Instrument.hpp"
+#include "Change.h"
+#include "Instrument.h"
 
-/// TODO: remove this:
-extern Song* _song;
+class ChangeEffectCreate : public Change {
+public:
+  ChangeEffectCreate(Instrument* inst, char timeline, char type = -1);
+  virtual ~ChangeEffectCreate();
+protected:
+  virtual void doForwards();
+  virtual void doBackwards();
+  Instrument* inst;
+  char timeline;
+  char type;
+  unsigned char* buffer;
+  unsigned char depth;
+};
 
-extern char startRecording;
-extern char stopRecording;
-extern char recordingStopped;
-extern std::vector<float> recordedSamples;
-
-void audioCallback_init();
-
-int audioCallback( const void *inputBuffer, void *outputBuffer,
-                   unsigned long framesPerBuffer,
-                   const PaStreamCallbackTimeInfo* timeInfo,
-                   PaStreamCallbackFlags statusFlags,
-                   void *userData );
-
-#endif // AUDIO_CALLBACK_H 
+#endif // CHANGE_EFFECT_CREATE_H

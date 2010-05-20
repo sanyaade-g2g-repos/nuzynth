@@ -24,7 +24,7 @@
  */
 
 #include <memory.h>
-#include "keyboard.hpp"
+#include "keyboard.h"
 #include <stdio.h>
 
 bool allKeys[128];

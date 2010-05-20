@@ -28,8 +28,8 @@
 
 #include <wx/wx.h>
 
-#include "Instrument.hpp"
-#include "ChangeEffectDraw.hpp"
+#include "Instrument.h"
+#include "ChangeEffectDraw.h"
 
 class EffectCanvas: public wxWindow
 {

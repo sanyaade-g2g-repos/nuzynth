@@ -23,24 +23,22 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef CHANGE_OSCILLATOR_SLIDER_H 
-#define CHANGE_OSCILLATOR_SLIDER_H 
+#ifndef OSCILLATOR_H
+#define OSCILLATOR_H
 
-#include "Change.hpp"
-#include "Instrument.hpp"
+#include "Modulator.h"
+#include "HarmonicSet.h"
+#include "NoiseSpectrum.h"
+#include <fftw3.h>
 
-class ChangeOscillatorSlider : public Change {
-public:
-  ChangeOscillatorSlider(Instrument* inst, unsigned char* address, unsigned char newValue);
-  virtual ~ChangeOscillatorSlider();
-  void update(unsigned char newValue);
-protected:
-  virtual void doForwards();
-  virtual void doBackwards();
-  Instrument* inst;
-  unsigned char* address;
-  unsigned char before;
-  unsigned char after;
+
+struct Oscillator {
+  HarmonicSet harmonicSet[NUM_VOICES];
+  NoiseSpectrum noise;
+  bool dirty;
 };
 
-#endif // CHANGE_OSCILLATOR_SLIDER_H 
+void Oscillator_init(Oscillator* oscillator);
+void Oscillator_renderWave(Oscillator* oscillator, float* wave);
+
+#endif // OSCILLATOR_H

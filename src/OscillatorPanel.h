@@ -23,55 +23,58 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef TIMELINE_PANEL_H
-#define TIMELINE_PANEL_H
+#ifndef OSCILLATOR_PANEL_H
+#define OSCILLATOR_PANEL_H
 
-#include <stdlib.h>
 #include <wx/wx.h>
-#include "WheelCatcher.hpp"
-#include "Instrument.hpp"
-#include "ChangeTimelineSpeed.hpp"
+#include "Instrument.h"
+#include "OscillatorCanvas.h"
+#include "ChangeOscillatorSlider.h"
 
-class EffectPanel;
-
-// Define a new frame type: this is going to be our main frame
-class TimelinePanel : public wxPanel {
+class OscillatorPanel : public wxPanel {
 public:
-  TimelinePanel(wxScrolledWindow* scrollMe, int timeline, bool isConstant, 
-                wxString timelineTitle, wxString addLabel,
-                wxWindow *parent, wxWindowID id);
+  OscillatorPanel(wxWindow *parent, wxWindowID id);
   
   void setInstrument(Instrument* inst);
   
 private:
-  int timeline;
-  bool isConstant;
-  Instrument* inst;
-  wxScrolledWindow* scrollMe;
+  Instrument       *inst;
+  int               selectedVoice;
+  wxSpinCtrl       *numerator;
+  wxSpinCtrl       *denominator;
+  wxBoxSizer       *voiceBox;
+  wxChoice         *voiceChoice;
+  wxSlider         *blurSlider;
+  wxSlider         *stretchSlider;
+  OscillatorCanvas *oscillatorCanvas;
+  ChangeOscillatorSlider *sliderChange;
+  bool              callbacksAssigned;
   
-  void onEffectCountChanged( int* val );
-  void addChild(Effect* effect);
-  void destroyChild(EffectPanel* child);
-  void OnAddPressed( wxCommandEvent &event );
-  void OnSliderUpdate( wxScrollEvent &event );
-  void OnSliderFinish( wxScrollEvent &event );
-  void speedChangedCallback(unsigned char* val);
+  void setVoice(int voice);
+  void removeCalbacks();
+  void stretchCallback(unsigned char*);
+  void blurCallback(unsigned char*);
+  void numeratorCallback(unsigned char*);
+  void denominatorCallback(unsigned char*);
+  void spinUpdated(wxCommandEvent& event);
   
-  wxButton         *addButton;
-  wxSlider         *speedSlider;
-  wxBoxSizer       *speedBox;
-  wxBoxSizer       *effectBox;
-  wxStaticBoxSizer *topBox;
-  std::vector<EffectPanel*> children;
-  ChangeTimelineSpeed *speedChange;
+  void OnChoiceUpdate( wxCommandEvent &event );
+  void OnSliderMove(wxScrollEvent& event);
+  void OnSliderRelease(wxScrollEvent& event);
+  void OnSpinCtrl(wxSpinEvent& event);
+  void OnSpinCtrlText(wxCommandEvent& event);
   
   // any class wishing to process wxWidgets events must use this macro
   DECLARE_EVENT_TABLE()
 };
 
 enum {
-  ADD_BUTTON = wxID_HIGHEST,
-  SPEED_SLIDER,
+  VOICE_CHOICE = wxID_HIGHEST,
+  OSC_SCROLL_BAR,
+  NUMERATOR_SPINNER,
+  DENOMINATOR_SPINNER,
+  BLUR_SLIDER,
+  STRETCH_SLIDER,
 };
 
-#endif // TIMELINE_PANEL_H
+#endif // OSCILLATOR_PANEL_H

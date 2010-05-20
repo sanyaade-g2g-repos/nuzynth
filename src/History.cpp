@@ -23,7 +23,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "History.hpp"
+#include "History.h"
 
 History::History() {
   index = 0;

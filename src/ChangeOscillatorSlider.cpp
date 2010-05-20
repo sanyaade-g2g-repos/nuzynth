@@ -24,8 +24,8 @@
  */
 
 #include <memory.h>
-#include "Monitor.hpp"
-#include "ChangeOscillatorSlider.hpp"
+#include "Monitor.h"
+#include "ChangeOscillatorSlider.h"
 
 ChangeOscillatorSlider::ChangeOscillatorSlider(Instrument* inst, unsigned char* address, unsigned char newValue) 
   : Change(false)

@@ -24,7 +24,7 @@
  */
 
 #include <memory.h>
-#include "ChangeOscillatorDraw.hpp"
+#include "ChangeOscillatorDraw.h"
 
 
 ChangeOscillatorDraw::ChangeOscillatorDraw(Instrument* inst, unsigned char* address, int size, bool noise)

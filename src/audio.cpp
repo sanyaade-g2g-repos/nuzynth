@@ -26,7 +26,7 @@
 #include <stdio.h>
 //#include <assert.h>
 
-#include "audio.hpp"
+#include "audio.h"
 
 
 PaStream *stream;

@@ -32,8 +32,8 @@
 #include "tinyxml.h"
 
 #include "random.h"
-#include "Instrument.hpp"
-#include "Monitor.hpp"
+#include "Instrument.h"
+#include "Monitor.h"
 #include "memoryBarrier.h"
 #include "../synthjit/SynthJIT.h"
 

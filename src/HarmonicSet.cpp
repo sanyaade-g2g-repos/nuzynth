@@ -26,7 +26,7 @@
 #include <memory.h>
 #include <math.h>
 #include "Modulator.h"
-#include "HarmonicSet.hpp"
+#include "HarmonicSet.h"
 
 void HarmonicSet_init(HarmonicSet* set, bool silent)
 {

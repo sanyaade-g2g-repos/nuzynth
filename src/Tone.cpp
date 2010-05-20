@@ -23,14 +23,14 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include "Tone.h"
+#include "audio.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include "random.h"
-#include "Tone.h"
-#include "Track.hpp"
-#include "Instrument.hpp"
-#include "audio.hpp"
+#include "Track.h"
+#include "Instrument.h"
 
 float randomZeroCrossing(float* wave) {
   if (wave[0] == 0.0f) return 0.0f;

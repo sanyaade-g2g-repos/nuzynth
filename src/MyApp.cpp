@@ -23,16 +23,22 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "MyApp.hpp"
-#include "midi.hpp"
-#include "audio.hpp"
-#include "audioCallback.hpp"
+#include "MyApp.h"
+/*
+#include "EnvelopeCanvas.h"
+#include "HarmonicCanvas.h"
+#include "IntervalCanvas.h"
+#include "WaveCanvas.h"
+*/
+#include "midi.h"
+#include "audio.h"
+#include "audioCallback.h"
 #include "Modulator.h"
-#include "Instrument.hpp"
-#include "keyboard.hpp"
-#include "Clip.hpp"
-#include "Track.hpp"
-#include "SharedManagerBase.hpp"
+#include "Instrument.h"
+#include "keyboard.h"
+#include "Clip.h"
+#include "Track.h"
+#include "SharedManagerBase.h"
 
 // Create a new application object: this macro will allow wxWidgets to create
 // the application object during program execution (it's better than using a

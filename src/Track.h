@@ -23,52 +23,45 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef SHARED_MANAGER_BASE_H
-#define SHARED_MANAGER_BASE_H
+#ifndef TRACK_H
+#define TRACK_H
 
 #include <stdio.h>
 #include <vector>
-#include "Sharer.hpp"
+#include "CloneManager.h"
+#include "TrackData.h"
+#include "Note.h"
 
-class SharedManagerBase {
+class Instrument;
+
+class Track : public CloneManager<TrackData> {
 public:
   
-  // To be called frequently to share data and destroy old data:
-  static void share();
+  Track(Instrument* instrument);
+  ~Track();
   
-  // To be called to indicate that no threads are using any of the 
-  // outdated clones or abandoned  anymore. 
-  static void markOldStuffAsUnused();
+  int nextID;
   
+  std::vector<Note> notes;
+  std::vector<int> bars;
+  std::vector<int> emptyRuns;
   
-  SharedManagerBase();
-  virtual ~SharedManagerBase();
+  int allocateNote(int id);
+  int allocateNotePair(int start, int end, int pitch);
   
-  // Indicate that the manager's data should be cloned and shared
-  // next time updateClones() is called. 
-  void markDirty();
+  void freeNote(int index);
+  void freeNoteLine(int beginning);
   
-  // Indicate that the manager is scheduled to be deleted as soon as all
-  // threads stop using it:
-  void condemn();
+  void sortNote(int index, bool spliceOut = true);
   
-  bool isCondemned();
+  int compareNotes(int index1, int index2);
+  
+  void setInstrument(Instrument* inst);
   
 protected:
-  virtual void update() = 0;
-  virtual void harvest() = 0;
-  virtual void abandon() = 0;
   
-private:
-  bool dirty;
-  unsigned int clonedIndex;
-  unsigned int condemnedIndex;
-  
-  static std::vector<SharedManagerBase*> dirtyManagers;
-  static std::vector<SharedManagerBase*> bloatedManagers;
-  static std::vector<SharedManagerBase*> condemnedManagers;
-  static Sharer<unsigned int, true> writeSharedSyncIndex;
-  static Sharer<unsigned int, false> readSharedSyncIndex;
+  virtual void updateClone();
+  virtual void destroyOldClone(TrackData* newClone, TrackData* oldClone);
 };
 
-#endif // SHARED_MANAGER_BASE_H
+#endif // TRACK_H

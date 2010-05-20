@@ -23,23 +23,32 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef CHANGE_TIMELINE_SPEED_H
-#define CHANGE_TIMELINE_SPEED_H
+#ifndef CLIP_H
+#define CLIP_H
 
-#include "Change.hpp"
-#include "Instrument.hpp"
+#include <stdio.h>
+#include <vector>
+#include "SharedManagerBase.h"
 
-class ChangeTimelineSpeed : public Change {
+class Track;
+
+class Clip : public SharedManagerBase {
 public:
-  ChangeTimelineSpeed(Instrument* inst, char timeline, unsigned char value);
-  virtual ~ChangeTimelineSpeed();
+  std::vector<Track*> tracks;
+  
+  Clip();
+  ~Clip();
+  
 protected:
-  virtual void doForwards();
-  virtual void doBackwards();
-  Instrument* inst;
-  char timeline;
-  unsigned char before;
-  unsigned char after;
+  
+  // Don't override this function!
+  virtual void update();
+  
+  // Don't override this function!
+  virtual void harvest();
+  
+  // Don't override this function!
+  virtual void abandon();
 };
 
-#endif // CHANGE_TIMELINE_SPEED_H
+#endif // CLIP_H

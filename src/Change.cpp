@@ -23,7 +23,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "Change.hpp"
+#include "Change.h"
 
 Change::Change(bool reversed) {
   this->reversed = reversed;

@@ -24,9 +24,9 @@
  */
 
 #include <stdio.h>
-#include "EffectPanel.hpp"
-#include "Monitor.hpp"
-#include "ChangeEffectCreate.hpp"
+#include "EffectPanel.h"
+#include "Monitor.h"
+#include "ChangeEffectCreate.h"
 
 BEGIN_EVENT_TABLE(TimelinePanel, wxPanel)
   EVT_COMMAND_SCROLL_THUMBTRACK (SPEED_SLIDER, TimelinePanel::OnSliderUpdate)

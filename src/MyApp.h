@@ -23,23 +23,30 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef SONG_H
-#define SONG_H
+#ifndef MY_APP_H
+#define MY_APP_H
 
-#include <stdio.h>
-#include <vector>
-#include "History.hpp";
+#include <wx/wx.h>
+#include "MyFrame.h"
 
-class Clip;
 
-class Song {
+class MyApp : public wxApp
+{
 public:
-  std::vector<Clip*> clips;
-  History history;
+  // this one is called on application startup and is a good place for the app
+  // initialization (doing it here and not in the ctor allows to have an error
+  // return: if OnInit() returns false, the application terminates)
+  virtual bool OnInit();
   
-  //Song();
-  //Song(FILE*);
-  //~Song();
+  virtual int OnExit();
+  
+  MyFrame *frame;
+  
+  void OnKeyDown(wxKeyEvent& event);
+  void OnKeyUp(wxKeyEvent& event);
+  void OnIdle( wxIdleEvent& event );
+  
+  DECLARE_EVENT_TABLE()
 };
 
-#endif // SONG_H
+#endif // MY_APP_H

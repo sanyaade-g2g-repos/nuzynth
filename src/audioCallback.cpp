@@ -28,14 +28,14 @@
 #include <memory.h>
 //#include <assert.h>
 
-#include "audio.hpp"
-#include "audioCallback.hpp"
-#include "midi.hpp"
+#include "audio.h"
+#include "audioCallback.h"
+#include "midi.h"
 #include "Tone.h"
-#include "keyboard.hpp"
-#include "Clip.hpp"
-#include "Track.hpp"
-#include "Instrument.hpp"
+#include "keyboard.h"
+#include "Clip.h"
+#include "Track.h"
+#include "Instrument.h"
 
 
 

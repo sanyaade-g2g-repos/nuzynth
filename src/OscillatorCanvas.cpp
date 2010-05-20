@@ -27,8 +27,8 @@
 #include <math.h>
 #include <limits>
 
-#include "OscillatorCanvas.hpp"
-#include "Monitor.hpp"
+#include "OscillatorCanvas.h"
+#include "Monitor.h"
 
 BEGIN_EVENT_TABLE(OscillatorCanvas, wxWindow)
   EVT_PAINT(OscillatorCanvas::OnPaint)

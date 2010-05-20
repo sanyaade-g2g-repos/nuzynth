@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <memory.h>
 #include <math.h>
-#include "NoiseSpectrum.hpp"
+#include "NoiseSpectrum.h"
 #include "random.h"
 
 void NoiseSpectrum_init(NoiseSpectrum* noise) {

@@ -24,7 +24,7 @@
  */
 
 #include <memory.h>
-#include "ChangeEffectDraw.hpp"
+#include "ChangeEffectDraw.h"
 
 
 ChangeEffectDraw::ChangeEffectDraw(Instrument* inst, char timeline, char type)
